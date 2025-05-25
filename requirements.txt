@@ -1,4 +1,4 @@
 streamlit
-pydub
+librosa
 numpy
-ffmpeg-python
+soundfile  # needed for librosa to load audio
