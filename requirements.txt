@@ -4,3 +4,5 @@ numpy
 soundfile
 matplotlib
 altair
+streamlit-webrtc
+av
