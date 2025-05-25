@@ -1,49 +1,116 @@
 import streamlit as st
 import numpy as np
 import librosa
-import librosa.display
-import matplotlib.pyplot as plt
 import altair as alt
+import sounddevice as sd
+import queue
+import threading
+import time
 
-st.set_page_config(page_title="Sound Level Meter", layout="wide")
-st.title("🔊 Real-Time Sound Level Meter")
+st.set_page_config(page_title="Real-Time Sound Level Meter", layout="wide")
+st.title("🔊 Real-Time Sound Level Meter with Scrolling Chart")
 
-uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "ogg"])
+MODE = st.sidebar.radio("Input mode:", ["Upload Audio File", "Microphone Live"])
 
-if uploaded_file:
-    st.audio(uploaded_file)
-    y, sr = librosa.load(uploaded_file, sr=None)
+# Parameters for RMS computation
+FRAME_SIZE = 2048
+HOP_LENGTH = 512
+WINDOW_SIZE = 100  # Number of points to show on the scrolling chart (~recent values)
 
-    # Frame size and hop length for "real-time" simulation
-    frame_size = 2048
-    hop_length = 512
-
-    # Compute RMS values per frame
-    rms = librosa.feature.rms(y=y, frame_length=frame_size, hop_length=hop_length)[0]
-    times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
-
-    # Convert to decibels
+def compute_db(y):
+    rms = librosa.feature.rms(y=y, frame_length=FRAME_SIZE, hop_length=HOP_LENGTH)[0]
     db = 20 * np.log10(rms + 1e-6)
+    return db
 
-    # Optional smoothing: simple moving average
-    window = 5
-    smooth_db = np.convolve(db, np.ones(window) / window, mode='same')
+# --- Upload Audio File Mode ---
+if MODE == "Upload Audio File":
+    uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "ogg"])
+    if uploaded_file is not None:
+        st.audio(uploaded_file)
+        y, sr = librosa.load(uploaded_file, sr=None)
 
-    # Peak hold: highlight peak level
-    peak_db = np.max(db)
+        db = compute_db(y)
 
-    st.subheader("📊 dB Level Over Time (with smoothing)")
+        times = librosa.frames_to_time(np.arange(len(db)), sr=sr, hop_length=HOP_LENGTH)
 
-    chart_data = {
-        "Time (s)": times,
-        "dB Level": smooth_db
-    }
+        # Scrolling window start index, controlled by slider
+        max_start = max(0, len(db) - WINDOW_SIZE)
+        start_idx = st.slider("Scroll through time (seconds)", 0, max_start, max_start)
 
-    df = alt.Chart(alt.Data(values=[{"x": t, "y": d} for t, d in zip(times, smooth_db)])).mark_line().encode(
-        x="x:Q",
-        y="y:Q"
-    ).properties(width=800, height=400).interactive()
+        chart_data = [{"Time (s)": times[i], "dB Level": db[i]} for i in range(start_idx, start_idx + WINDOW_SIZE)]
+        df = alt.Data(values=chart_data)
 
-    st.altair_chart(df)
+        chart = alt.Chart(df).mark_line().encode(
+            x='Time (s):Q',
+            y=alt.Y('dB Level:Q', scale=alt.Scale(domain=[-80, 0]))
+        ).properties(width=800, height=300)
 
-    st.metric("📈 Peak dB", f"{peak_db:.2f} dB")
+        st.altair_chart(chart, use_container_width=True)
+
+# --- Microphone Live Mode ---
+else:
+    st.write("Click Start to begin microphone input.")
+
+    if 'audio_queue' not in st.session_state:
+        st.session_state.audio_queue = queue.Queue()
+        st.session_state.running = False
+        st.session_state.db_values = []
+        st.session_state.times = []
+
+    def audio_callback(indata, frames, time_info, status):
+        if status:
+            print(status)
+        st.session_state.audio_queue.put(indata.copy())
+
+    def audio_thread():
+        with sd.InputStream(channels=1, callback=audio_callback, blocksize=HOP_LENGTH):
+            while st.session_state.running:
+                time.sleep(0.1)
+
+    if st.button("Start Microphone"):
+        if not st.session_state.running:
+            st.session_state.running = True
+            st.session_state.db_values = []
+            st.session_state.times = []
+            threading.Thread(target=audio_thread, daemon=True).start()
+
+    if st.button("Stop Microphone"):
+        st.session_state.running = False
+
+    if st.session_state.running:
+        # Collect audio from queue and process
+        try:
+            while not st.session_state.audio_queue.empty():
+                data = st.session_state.audio_queue.get_nowait()
+                y = data.flatten()
+
+                rms = np.sqrt(np.mean(y**2))
+                db = 20 * np.log10(rms + 1e-6)
+
+                st.session_state.db_values.append(db)
+                current_time = time.time()
+                st.session_state.times.append(current_time)
+
+                # Keep only recent WINDOW_SIZE points for scrolling
+                if len(st.session_state.db_values) > WINDOW_SIZE:
+                    st.session_state.db_values.pop(0)
+                    st.session_state.times.pop(0)
+
+        except queue.Empty:
+            pass
+
+        if st.session_state.db_values:
+            times_rel = np.array(st.session_state.times) - st.session_state.times[0]
+            chart_data = [{"Time (s)": t, "dB Level": d} for t, d in zip(times_rel, st.session_state.db_values)]
+
+            df = alt.Data(values=chart_data)
+
+            chart = alt.Chart(df).mark_line().encode(
+                x='Time (s):Q',
+                y=alt.Y('dB Level:Q', scale=alt.Scale(domain=[-80, 0]))
+            ).properties(width=800, height=300)
+
+            st.altair_chart(chart, use_container_width=True)
+
+    else:
+        st.write("Microphone is stopped.")
