@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
-import io
-import soundfile as sf
+import tempfile
 import librosa
 import altair as alt
 from streamlit_webrtc import webrtc_streamer
@@ -16,10 +15,11 @@ uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "og
 
 if uploaded_file:
     st.audio(uploaded_file)
-    # Read uploaded file into memory and load audio
-    data, samplerate = sf.read(io.BytesIO(uploaded_file.read()))
-    y = data.T if data.ndim > 1 else data  # Handle stereo by taking transpose
-    sr = samplerate
+    # Save uploaded file to temp file for librosa
+    with tempfile.NamedTemporaryFile(suffix=".wav") as tmp_file:
+        tmp_file.write(uploaded_file.read())
+        tmp_file.flush()
+        y, sr = librosa.load(tmp_file.name, sr=None)
 
     # Frame size and hop length for "real-time" simulation
     frame_size = 2048
