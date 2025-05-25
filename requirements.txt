@@ -1,4 +1,6 @@
 streamlit
 librosa
 numpy
-soundfile  # needed for librosa to load audio
+soundfile
+matplotlib
+altair
