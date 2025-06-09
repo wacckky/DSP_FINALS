@@ -43,8 +43,8 @@ def analyze_audio(y, sr):
     ax.set_ylabel("Amplitude")
     st.pyplot(fig)
 
+# ------------------ Upload Section ------------------
 
-# --- Upload File ---
 if option == "Upload Audio File":
     uploaded_file = st.file_uploader("Upload .wav/.mp3/.ogg", type=["wav", "mp3", "ogg"])
     if uploaded_file:
@@ -56,15 +56,18 @@ if option == "Upload Audio File":
                 y, sr = librosa.load(tmp.name, sr=None)
                 analyze_audio(y, sr)
 
-# --- Use Microphone ---
+# ------------------ Microphone Section ------------------
+
 elif option == "Use Microphone":
     st.markdown("🎤 Click **Start** and allow microphone access.")
 
-    # Init session vars
+    # Session State Init
     if "mic_buffer" not in st.session_state:
         st.session_state.mic_buffer = np.array([], dtype=np.float32)
-    if "mic_ready" not in st.session_state:
-        st.session_state.mic_ready = False
+    if "recording_stopped" not in st.session_state:
+        st.session_state.recording_stopped = False
+    if "was_playing" not in st.session_state:
+        st.session_state.was_playing = False
 
     def mic_callback(frame: av.AudioFrame) -> av.AudioFrame:
         audio = frame.to_ndarray(format="flt32")
@@ -72,7 +75,7 @@ elif option == "Use Microphone":
         st.session_state.mic_buffer = np.concatenate((st.session_state.mic_buffer, mono))
         return frame
 
-    # Start streaming
+    # Start mic stream
     webrtc_ctx = webrtc_streamer(
         key="mic-stream",
         mode=WebRtcMode.SENDRECV,
@@ -80,16 +83,25 @@ elif option == "Use Microphone":
         media_stream_constraints={"audio": True, "video": False},
     )
 
-    # Show analysis buttons only when not playing
-    if not webrtc_ctx.state.playing and st.session_state.mic_buffer.size > 0:
-        st.success("✅ Recording complete.")
+    # Track mic state transition
+    if webrtc_ctx.state.playing:
+        st.session_state.was_playing = True
+        st.session_state.recording_stopped = False
+    elif st.session_state.was_playing and not webrtc_ctx.state.playing:
+        st.session_state.recording_stopped = True
 
+    # Show analysis options after stop
+    if st.session_state.recording_stopped and st.session_state.mic_buffer.size > 0:
+        st.success("✅ Recording complete.")
         col1, col2 = st.columns(2)
+
         if col1.button("🔍 Analyze Recording"):
             y = st.session_state.mic_buffer
-            sr = 16000  # assume 16kHz from mic
+            sr = 16000  # Assuming mic records at 16kHz
             analyze_audio(y, sr)
 
         if col2.button("🔁 Retake"):
             st.session_state.mic_buffer = np.array([], dtype=np.float32)
+            st.session_state.recording_stopped = False
+            st.session_state.was_playing = False
             st.experimental_rerun()
