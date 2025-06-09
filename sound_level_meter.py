@@ -6,7 +6,6 @@ import altair as alt
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
 import matplotlib.pyplot as plt
-import io
 
 st.set_page_config(page_title="Sound Level Meter", layout="wide")
 st.title("🔊 Real-Time Sound Level Meter")
@@ -21,42 +20,44 @@ if option == "Upload Audio File":
     if uploaded_file:
         st.audio(uploaded_file)
 
-        with tempfile.NamedTemporaryFile(suffix=".wav") as tmp_file:
-            tmp_file.write(uploaded_file.read())
-            tmp_file.flush()
-            y, sr = librosa.load(tmp_file.name, sr=None)
+        # Analyze button
+        if st.button("🔍 Analyze Audio"):
+            with tempfile.NamedTemporaryFile(suffix=".wav") as tmp_file:
+                tmp_file.write(uploaded_file.read())
+                tmp_file.flush()
+                y, sr = librosa.load(tmp_file.name, sr=None)
 
-        # Frame and hop sizes
-        frame_size = 2048
-        hop_length = 512
+            # Frame and hop sizes
+            frame_size = 2048
+            hop_length = 512
 
-        # Compute RMS and dB
-        rms = librosa.feature.rms(y=y, frame_length=frame_size, hop_length=hop_length)[0]
-        times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
-        db = 20 * np.log10(rms + 1e-6)
-        smooth_db = np.convolve(db, np.ones(5) / 5, mode='same')
-        peak_db = np.max(db)
+            # Compute RMS and dB
+            rms = librosa.feature.rms(y=y, frame_length=frame_size, hop_length=hop_length)[0]
+            times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
+            db = 20 * np.log10(rms + 1e-6)
+            smooth_db = np.convolve(db, np.ones(5) / 5, mode='same')
+            peak_db = np.max(db)
 
-        st.subheader("📊 dB Level Over Time")
-        df = alt.Chart(alt.Data(values=[{"x": t, "y": d} for t, d in zip(times, smooth_db)]))\
-            .mark_line().encode(
-                x=alt.X("x:Q", title="Time (s)"),
-                y=alt.Y("y:Q", title="dB Level")
-            ).properties(width=800, height=400).interactive()
-        st.altair_chart(df)
-        st.metric("📈 Peak dB", f"{peak_db:.2f} dB")
+            st.subheader("📊 dB Level Over Time")
+            df = alt.Chart(alt.Data(values=[{"x": t, "y": d} for t, d in zip(times, smooth_db)]))\
+                .mark_line().encode(
+                    x=alt.X("x:Q", title="Time (s)"),
+                    y=alt.Y("y:Q", title="dB Level")
+                ).properties(width=800, height=400).interactive()
+            st.altair_chart(df)
+            st.metric("📈 Peak dB", f"{peak_db:.2f} dB")
 
-        # Frequency Analysis
-        st.subheader("🎶 Frequency Spectrum")
-        fft = np.abs(np.fft.rfft(y))
-        freqs = np.fft.rfftfreq(len(y), 1 / sr)
+            # Frequency Analysis
+            st.subheader("🎶 Frequency Spectrum")
+            fft = np.abs(np.fft.rfft(y))
+            freqs = np.fft.rfftfreq(len(y), 1 / sr)
 
-        fig, ax = plt.subplots()
-        ax.plot(freqs, fft)
-        ax.set_xlabel("Frequency (Hz)")
-        ax.set_ylabel("Amplitude")
-        ax.set_title("Frequency Spectrum")
-        st.pyplot(fig)
+            fig, ax = plt.subplots()
+            ax.plot(freqs, fft)
+            ax.set_xlabel("Frequency (Hz)")
+            ax.set_ylabel("Amplitude")
+            ax.set_title("Frequency Spectrum")
+            st.pyplot(fig)
 
 # --- Step 2B: Microphone Input ---
 elif option == "Use Microphone":
@@ -74,13 +75,11 @@ elif option == "Use Microphone":
         rms = np.sqrt(np.mean(audio_mono**2))
         db = 20 * np.log10(rms + 1e-6)
 
-        # Smoothed dB
         if "last_db" not in st.session_state:
             st.session_state.last_db = db
         else:
             st.session_state.last_db = 0.9 * st.session_state.last_db + 0.1 * db
 
-        # Store dB and audio
         t = len(st.session_state.db_history) / 20
         st.session_state.db_history.append((t, st.session_state.last_db))
         st.session_state.audio_buffer = np.concatenate([st.session_state.audio_buffer, audio_mono])
@@ -98,7 +97,6 @@ elif option == "Use Microphone":
         st.write(f"🎚️ Live dB Level: **{st.session_state.last_db:.2f} dB**")
         st.session_state.show_buttons = True
 
-    # Analysis and Retake Buttons
     if st.session_state.get("show_buttons", False):
         col1, col2 = st.columns(2)
         with col1:
@@ -118,7 +116,6 @@ elif option == "Use Microphone":
             peak = max(d for _, d in st.session_state.db_history)
             st.metric("📈 Peak dB", f"{peak:.2f} dB")
 
-            # Frequency Spectrum
             st.subheader("🎶 Frequency Spectrum from Mic")
             audio_data = st.session_state.audio_buffer
             if len(audio_data) > 0:
