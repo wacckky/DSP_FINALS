@@ -64,10 +64,15 @@ elif option == "Use Microphone":
     st.header("🎤 Live Microphone Monitor")
     st.markdown("Click **Start** and allow microphone access.")
 
+    # Initialize session state variables
     if "db_history" not in st.session_state:
         st.session_state.db_history = []
     if "audio_buffer" not in st.session_state:
         st.session_state.audio_buffer = np.array([], dtype=np.float32)
+    if "last_db" not in st.session_state:
+        st.session_state.last_db = 0.0
+    if "show_buttons" not in st.session_state:
+        st.session_state.show_buttons = False
 
     def audio_frame_callback(frame: av.AudioFrame) -> av.AudioFrame:
         audio = frame.to_ndarray(format="flt32")
@@ -75,11 +80,7 @@ elif option == "Use Microphone":
         rms = np.sqrt(np.mean(audio_mono**2))
         db = 20 * np.log10(rms + 1e-6)
 
-        if "last_db" not in st.session_state:
-            st.session_state.last_db = db
-        else:
-            st.session_state.last_db = 0.9 * st.session_state.last_db + 0.1 * db
-
+        st.session_state.last_db = 0.9 * st.session_state.last_db + 0.1 * db
         t = len(st.session_state.db_history) / 20
         st.session_state.db_history.append((t, st.session_state.last_db))
         st.session_state.audio_buffer = np.concatenate([st.session_state.audio_buffer, audio_mono])
@@ -97,7 +98,8 @@ elif option == "Use Microphone":
         st.write(f"🎚️ Live dB Level: **{st.session_state.last_db:.2f} dB**")
         st.session_state.show_buttons = True
 
-    if st.session_state.get("show_buttons", False):
+    # Analyze or Retake Buttons
+    if st.session_state.show_buttons:
         col1, col2 = st.columns(2)
         with col1:
             analyze = st.button("🔍 Analyze")
@@ -132,6 +134,6 @@ elif option == "Use Microphone":
         if retake:
             st.session_state.db_history = []
             st.session_state.audio_buffer = np.array([], dtype=np.float32)
-            st.session_state.last_db = 0
+            st.session_state.last_db = 0.0
             st.session_state.show_buttons = False
             st.experimental_rerun()
