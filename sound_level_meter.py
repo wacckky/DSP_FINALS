@@ -5,86 +5,136 @@ import librosa
 import altair as alt
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
+import matplotlib.pyplot as plt
+import io
 
 st.set_page_config(page_title="Sound Level Meter", layout="wide")
 st.title("🔊 Real-Time Sound Level Meter")
 
-# --- Section 1: Audio File Upload ---
+# --- Step 1: Choose Input Method ---
+option = st.radio("Choose Input Method:", ["Upload Audio File", "Use Microphone"])
 
-uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "ogg"])
+# --- Step 2A: Audio File Upload ---
+if option == "Upload Audio File":
+    uploaded_file = st.file_uploader("Upload an audio file", type=["wav", "mp3", "ogg"])
 
-if uploaded_file:
-    st.audio(uploaded_file)
+    if uploaded_file:
+        st.audio(uploaded_file)
 
-    # Save uploaded audio to a temporary file
-    with tempfile.NamedTemporaryFile(suffix=".wav") as tmp_file:
-        tmp_file.write(uploaded_file.read())
-        tmp_file.flush()
-        y, sr = librosa.load(tmp_file.name, sr=None)
+        with tempfile.NamedTemporaryFile(suffix=".wav") as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            tmp_file.flush()
+            y, sr = librosa.load(tmp_file.name, sr=None)
 
-    # Frame and hop sizes
-    frame_size = 2048
-    hop_length = 512
+        # Frame and hop sizes
+        frame_size = 2048
+        hop_length = 512
 
-    # Compute RMS and dB
-    rms = librosa.feature.rms(y=y, frame_length=frame_size, hop_length=hop_length)[0]
-    times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
-    db = 20 * np.log10(rms + 1e-6)
+        # Compute RMS and dB
+        rms = librosa.feature.rms(y=y, frame_length=frame_size, hop_length=hop_length)[0]
+        times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
+        db = 20 * np.log10(rms + 1e-6)
+        smooth_db = np.convolve(db, np.ones(5) / 5, mode='same')
+        peak_db = np.max(db)
 
-    # Smoothing
-    window = 5
-    smooth_db = np.convolve(db, np.ones(window) / window, mode='same')
-    peak_db = np.max(db)
+        st.subheader("📊 dB Level Over Time")
+        df = alt.Chart(alt.Data(values=[{"x": t, "y": d} for t, d in zip(times, smooth_db)]))\
+            .mark_line().encode(
+                x=alt.X("x:Q", title="Time (s)"),
+                y=alt.Y("y:Q", title="dB Level")
+            ).properties(width=800, height=400).interactive()
+        st.altair_chart(df)
+        st.metric("📈 Peak dB", f"{peak_db:.2f} dB")
 
-    st.subheader("📊 dB Level Over Time (with smoothing)")
+        # Frequency Analysis
+        st.subheader("🎶 Frequency Spectrum")
+        fft = np.abs(np.fft.rfft(y))
+        freqs = np.fft.rfftfreq(len(y), 1 / sr)
 
-    df = alt.Chart(alt.Data(values=[
-        {"x": t, "y": d} for t, d in zip(times, smooth_db)
-    ])).mark_line().encode(
-        x=alt.X("x:Q", title="Time (s)"),
-        y=alt.Y("y:Q", title="dB Level")
-    ).properties(width=800, height=400).interactive()
+        fig, ax = plt.subplots()
+        ax.plot(freqs, fft)
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("Amplitude")
+        ax.set_title("Frequency Spectrum")
+        st.pyplot(fig)
 
-    st.altair_chart(df)
-    st.metric("📈 Peak dB", f"{peak_db:.2f} dB")
+# --- Step 2B: Microphone Input ---
+elif option == "Use Microphone":
+    st.header("🎤 Live Microphone Monitor")
+    st.markdown("Click **Start** and allow microphone access.")
 
-st.markdown("---")
+    if "db_history" not in st.session_state:
+        st.session_state.db_history = []
+    if "audio_buffer" not in st.session_state:
+        st.session_state.audio_buffer = np.array([], dtype=np.float32)
 
-# --- Section 2: Live Microphone Input ---
+    def audio_frame_callback(frame: av.AudioFrame) -> av.AudioFrame:
+        audio = frame.to_ndarray(format="flt32")
+        audio_mono = audio.mean(axis=0)  # Convert to mono
+        rms = np.sqrt(np.mean(audio_mono**2))
+        db = 20 * np.log10(rms + 1e-6)
 
-st.header("🎤 Live Microphone Input Monitor")
+        # Smoothed dB
+        if "last_db" not in st.session_state:
+            st.session_state.last_db = db
+        else:
+            st.session_state.last_db = 0.9 * st.session_state.last_db + 0.1 * db
 
-st.markdown("""
-- Click **Start** and allow your browser to access the microphone.
-- Use a headset or external mic for clearer signal.
-""")
+        # Store dB and audio
+        t = len(st.session_state.db_history) / 20
+        st.session_state.db_history.append((t, st.session_state.last_db))
+        st.session_state.audio_buffer = np.concatenate([st.session_state.audio_buffer, audio_mono])
 
-# Audio frame callback to compute RMS and dB
-def audio_frame_callback(frame: av.AudioFrame) -> av.AudioFrame:
-    audio = frame.to_ndarray(format="flt32")
-    rms = np.sqrt(np.mean(audio**2))
-    db = 20 * np.log10(rms + 1e-6)
+        return frame
 
-    # Exponential moving average smoothing
-    if "last_db" not in st.session_state:
-        st.session_state.last_db = db
-    else:
-        st.session_state.last_db = 0.9 * st.session_state.last_db + 0.1 * db
+    webrtc_ctx = webrtc_streamer(
+        key="mic-recorder",
+        mode=WebRtcMode.SENDRECV,
+        audio_frame_callback=audio_frame_callback,
+        media_stream_constraints={"audio": True, "video": False},
+    )
 
-    return frame
+    if webrtc_ctx.state.playing:
+        st.write(f"🎚️ Live dB Level: **{st.session_state.last_db:.2f} dB**")
+        st.session_state.show_buttons = True
 
-# Start WebRTC mic stream
-webrtc_ctx = webrtc_streamer(
-    key="mic-recorder",
-    mode=WebRtcMode.SENDRECV,
-    audio_frame_callback=audio_frame_callback,
-    media_stream_constraints={"audio": True, "video": False},
-)
+    # Analysis and Retake Buttons
+    if st.session_state.get("show_buttons", False):
+        col1, col2 = st.columns(2)
+        with col1:
+            analyze = st.button("🔍 Analyze")
+        with col2:
+            retake = st.button("🔁 Retake")
 
-# Display live mic dB
-if webrtc_ctx.state.playing:
-    last_db = st.session_state.get("last_db", None)
-    if last_db is not None:
-        st.write(f"🎚️ Live Microphone dB Level: **{last_db:.2f} dB**")
-else:
-    st.info("🎙️ Click Start and allow microphone access.")
+        if analyze and len(st.session_state.db_history) > 0:
+            st.subheader("📊 Analyzed dB Over Time")
+            data = [{"x": t, "y": d} for t, d in st.session_state.db_history]
+            chart = alt.Chart(alt.Data(values=data)).mark_line().encode(
+                x=alt.X("x:Q", title="Time (s)"),
+                y=alt.Y("y:Q", title="dB Level")
+            ).properties(width=800, height=400).interactive()
+            st.altair_chart(chart)
+
+            peak = max(d for _, d in st.session_state.db_history)
+            st.metric("📈 Peak dB", f"{peak:.2f} dB")
+
+            # Frequency Spectrum
+            st.subheader("🎶 Frequency Spectrum from Mic")
+            audio_data = st.session_state.audio_buffer
+            if len(audio_data) > 0:
+                fft = np.abs(np.fft.rfft(audio_data))
+                freqs = np.fft.rfftfreq(len(audio_data), 1 / 16000)  # Assume 16kHz
+
+                fig, ax = plt.subplots()
+                ax.plot(freqs, fft)
+                ax.set_xlabel("Frequency (Hz)")
+                ax.set_ylabel("Amplitude")
+                ax.set_title("Frequency Spectrum")
+                st.pyplot(fig)
+
+        if retake:
+            st.session_state.db_history = []
+            st.session_state.audio_buffer = np.array([], dtype=np.float32)
+            st.session_state.last_db = 0
+            st.session_state.show_buttons = False
+            st.experimental_rerun()
