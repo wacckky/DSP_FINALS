@@ -5,7 +5,7 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-mic_meter_html = """
+vertical_meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,34 +18,35 @@ mic_meter_html = """
       padding: 1rem;
       background: #f5f5f5;
     }
-    h1 {
-      margin-bottom: 0.5rem;
-    }
     #out {
-      font-size: 2rem;
-      margin: 0.5rem 0;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
     }
     #bar-container {
-      width: 100%;
-      height: 20px;
+      width: 30px;
+      height: 250px;
       background: #ddd;
-      border-radius: 10px;
+      border-radius: 15px;
       overflow: hidden;
-      margin-top: 0.5rem;
+      margin: 0 auto;
+      position: relative;
     }
     #bar {
-      height: 100%;
-      width: 0%;
-      background: #4caf50;
-      transition: width 0.15s ease-out;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, green, yellow, red);
+      position: absolute;
+      bottom: 0;
+      transition: height 0.15s ease-out;
+      transform-origin: bottom;
     }
   </style>
 </head>
 <body>
-  <h1>🎤 Live Microphone dB Meter</h1>
-  <p>Allow microphone access when prompted.</p>
   <div id="out">dB: 0.00</div>
-  <div id="bar-container"><div id="bar"></div></div>
+  <div id="bar-container">
+    <div id="bar"></div>
+  </div>
 
   <script>
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -71,10 +72,10 @@ mic_meter_html = """
             const db = 20 * Math.log10(rms + 1e-6);
             document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
 
-            // Map dB (roughly -100…0) to 0…100% width
+            // Map dB (roughly -100…0) to 0…100% height
             let pct = ((db + 100) / 100) * 100;
             pct = Math.max(0, Math.min(100, pct));
-            document.getElementById("bar").style.width = pct + "%";
+            document.getElementById("bar").style.height = pct + "%";
           }
 
           setInterval(updateMeter, 200);
@@ -89,5 +90,4 @@ mic_meter_html = """
 </html>
 """
 
-# Render the inline HTML/JS
-html(mic_meter_html, height=350, scrolling=True)
+html(vertical_meter_html, height=400, scrolling=True)
