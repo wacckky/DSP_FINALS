@@ -1,24 +1,119 @@
-<canvas id="chart" width="300" height="150"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // ... set up audio as before ...
-  const ctx = document.getElementById('chart').getContext('2d');
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: { labels: [], datasets: [{ label: 'dB', data: [], fill: false }] },
-    options: { animation: false, scales: { y: { beginAtZero: true } } }
-  });
-  function update() {
-    // compute db...
-    const now = new Date().toLocaleTimeString();
-    chart.data.labels.push(now);
-    chart.data.datasets[0].data.push(db);
-    if (chart.data.labels.length > 30) {
-      chart.data.labels.shift();
-      chart.data.datasets[0].data.shift();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Mic dB Meter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 1rem;
+      background: #f5f5f5;
     }
-    chart.update();
-    document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
-  }
-  setInterval(update, 200);
-</script>
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+    #out {
+      font-size: 2rem;
+      margin: 1rem 0;
+    }
+    #chart-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  </style>
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🎤 Live Microphone dB Meter</h1>
+  <p>Allow microphone access when prompted.</p>
+  <div id="out">dB: 0.00</div>
+  <div id="chart-container">
+    <canvas id="dbChart"></canvas>
+  </div>
+
+  <script>
+    // Ensure browser supports getUserMedia
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      document.getElementById("out").innerText = "getUserMedia not supported";
+    } else {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 2048;
+          source.connect(analyser);
+          const dataArray = new Uint8Array(analyser.fftSize);
+
+          // Setup Chart.js
+          const ctx = document.getElementById('dbChart').getContext('2d');
+          const dbChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: [],  // time labels
+              datasets: [{
+                label: 'dB Level',
+                data: [],
+                fill: false,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                tension: 0.1,
+              }]
+            },
+            options: {
+              animation: false,
+              scales: {
+                x: {
+                  display: true,
+                  title: { display: true, text: 'Time' }
+                },
+                y: {
+                  display: true,
+                  title: { display: true, text: 'dB' },
+                  suggestedMin: -100,
+                  suggestedMax: 0
+                }
+              },
+              plugins: {
+                legend: { display: false }
+              }
+            }
+          });
+
+          function updateMeter() {
+            analyser.getByteTimeDomainData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              let v = (dataArray[i] - 128) / 128;
+              sum += v * v;
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+            const db = 20 * Math.log10(rms + 1e-6);
+            const now = new Date().toLocaleTimeString();
+
+            // Update text
+            document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
+
+            // Update chart
+            dbChart.data.labels.push(now);
+            dbChart.data.datasets[0].data.push(db);
+            if (dbChart.data.labels.length > 30) {
+              dbChart.data.labels.shift();
+              dbChart.data.datasets[0].data.shift();
+            }
+            dbChart.update();
+          }
+
+          // Update every 200 ms
+          setInterval(updateMeter, 200);
+        })
+        .catch(err => {
+          document.getElementById("out").innerText = "Mic access denied or unavailable";
+          console.error("getUserMedia error:", err);
+        });
+    }
+  </script>
+</body>
+</html>
