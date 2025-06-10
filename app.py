@@ -5,12 +5,12 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-clean_labeled_meter_html = """
+detailed_ticks_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Labeled Mic dB Meter</title>
+  <title>Mic dB Meter with Ticks</title>
   <style>
     html, body {
       margin: 0;
@@ -25,30 +25,26 @@ clean_labeled_meter_html = """
       justify-content: center;
       align-items: flex-end;
       gap: 10px;
-      height: 280px;
+      height: 300px;
       position: relative;
     }
 
     #labels {
       position: relative;
       height: 250px;
-      width: 30px;
+      width: 35px;
     }
 
     .label {
       position: absolute;
       left: 0;
       transform: translateY(50%);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #333;
     }
 
-    .label:nth-child(1) { bottom:   0%; }  /* -100 dB */
-    .label:nth-child(2) { bottom:  20%; }  /* -80 dB */
-    .label:nth-child(3) { bottom:  40%; }  /* -60 dB */
-    .label:nth-child(4) { bottom:  60%; }  /* -40 dB */
-    .label:nth-child(5) { bottom:  80%; }  /* -20 dB */
-    .label:nth-child(6) { bottom: 100%; }  /*   0 dB */
+    /* Generate 11 tick positions from 0 to -100 dB */
+    %s
 
     #bar-container {
       position: relative;
@@ -82,12 +78,7 @@ clean_labeled_meter_html = """
   <div id="out">dB: 0.00</div>
   <div id="container">
     <div id="labels">
-      <div class="label">–100</div>
-      <div class="label">–80</div>
-      <div class="label">–60</div>
-      <div class="label">–40</div>
-      <div class="label">–20</div>
-      <div class="label">0</div>
+      %s
     </div>
     <div id="bar-container">
       <div id="bar"></div>
@@ -135,4 +126,16 @@ clean_labeled_meter_html = """
 </html>
 """
 
-html(clean_labeled_meter_html, height=330, scrolling=False)
+# Generate CSS + HTML ticks for -100 to 0 dB
+label_blocks = []
+css_blocks = []
+for i in range(11):
+    db = -100 + i * 10
+    percent = i * 10  # from 0 to 100%
+    label_id = f"label{i}"
+    css_blocks.append(f".label:nth-child({i+1}) {{ bottom: {percent}%; }}")
+    label_blocks.append(f'<div class="label">{db}</div>')
+
+final_html = detailed_ticks_html % ("\n".join(css_blocks), "\n".join(label_blocks))
+
+html(final_html, height=330, scrolling=False)
