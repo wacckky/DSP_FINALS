@@ -12,27 +12,35 @@ transparent_meter_html = """
   <meta charset="UTF-8"/>
   <title>Live Mic dB Meter</title>
   <style>
+    /* Make everything fully see-through */
     html, body {
       margin: 0;
       padding: 0;
-      background: transparent;
+      background: transparent !important;
       overflow: hidden;
       font-family: Arial, sans-serif;
     }
+
+    /* Your dB readout */
     #out {
       font-size: 1.8rem;
       margin-bottom: 1rem;
       color: #333;
     }
+
+    /* Container is now transparent with a subtle border */
     #bar-container {
       width: 30px;
       height: 250px;
-      background: #ddd;
+      background: transparent !important;
+      border: 2px solid rgba(0,0,0,0.2);
       border-radius: 15px;
       overflow: hidden;
       margin: 0 auto;
       position: relative;
     }
+
+    /* Gradient bar as before */
     #bar {
       width: 100%;
       height: 0%;
@@ -74,7 +82,6 @@ transparent_meter_html = """
             const db = 20 * Math.log10(rms + 1e-6);
             document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
 
-            // Map dB (roughly -100…0) to 0…100% height
             let pct = ((db + 100) / 100) * 100;
             pct = Math.max(0, Math.min(100, pct));
             document.getElementById("bar").style.height = pct + "%";
@@ -92,4 +99,5 @@ transparent_meter_html = """
 </html>
 """
 
+# Embed with no scrolling
 html(transparent_meter_html, height=350, scrolling=False)
