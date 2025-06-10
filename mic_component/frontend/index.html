@@ -1,32 +1,24 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Mic dB Meter</title>
-    <script>
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        const dataArray = new Uint8Array(analyser.fftSize);
-        source.connect(analyser);
-
-        function getVolume() {
-          analyser.getByteTimeDomainData(dataArray);
-          let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            let val = (dataArray[i] - 128) / 128;
-            sum += val * val;
-          }
-          const rms = Math.sqrt(sum / dataArray.length);
-          const db = 20 * Math.log10(rms + 1e-6);
-          document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
-        }
-
-        setInterval(getVolume, 200);
-      });
-    </script>
-  </head>
-  <body>
-    <h2 id="out">dB: 0</h2>
-  </body>
-</html>
+<canvas id="chart" width="300" height="150"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // ... set up audio as before ...
+  const ctx = document.getElementById('chart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'dB', data: [], fill: false }] },
+    options: { animation: false, scales: { y: { beginAtZero: true } } }
+  });
+  function update() {
+    // compute db...
+    const now = new Date().toLocaleTimeString();
+    chart.data.labels.push(now);
+    chart.data.datasets[0].data.push(db);
+    if (chart.data.labels.length > 30) {
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
+    }
+    chart.update();
+    document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
+  }
+  setInterval(update, 200);
+</script>
