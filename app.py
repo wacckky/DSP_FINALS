@@ -191,7 +191,7 @@ meter_html = """
           const dataArray = new Uint8Array(analyser.fftSize);
 
           let lastDb = -100;
-          const smoothingFactor = 0.8;
+          const smoothingFactor = 0.5;
 
           function updateMeter() {
             analyser.getByteTimeDomainData(dataArray);
