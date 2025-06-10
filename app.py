@@ -228,4 +228,4 @@ meter_html = """
 </body>
 </html>
 """
-    html(meter_html, height=350, scrolling=False)
+html(meter_html, height=350, scrolling=False)
