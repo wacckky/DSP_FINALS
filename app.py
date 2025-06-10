@@ -5,23 +5,47 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-# Read your HTML/JS into a string (you can also load from file)
 mic_meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <title>Live Mic dB Meter</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 1rem; background: #f5f5f5; }
-    h1 { margin-bottom: 0.5rem; }
-    #out { font-size: 2rem; margin: 1rem 0; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+    #out {
+      font-size: 2rem;
+      margin: 0.5rem 0;
+    }
+    #bar-container {
+      width: 100%;
+      height: 20px;
+      background: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    #bar {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      transition: width 0.15s ease-out;
+    }
   </style>
 </head>
 <body>
   <h1>🎤 Live Microphone dB Meter</h1>
   <p>Allow microphone access when prompted.</p>
   <div id="out">dB: 0.00</div>
+  <div id="bar-container"><div id="bar"></div></div>
 
   <script>
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -46,6 +70,11 @@ mic_meter_html = """
             const rms = Math.sqrt(sum / dataArray.length);
             const db = 20 * Math.log10(rms + 1e-6);
             document.getElementById("out").innerText = `dB: ${db.toFixed(2)}`;
+
+            // Map dB (roughly -100…0) to 0…100% width
+            let pct = ((db + 100) / 100) * 100;
+            pct = Math.max(0, Math.min(100, pct));
+            document.getElementById("bar").style.width = pct + "%";
           }
 
           setInterval(updateMeter, 200);
@@ -60,5 +89,5 @@ mic_meter_html = """
 </html>
 """
 
-# Embed it directly
-html(mic_meter_html, height=300, scrolling=True)
+# Render the inline HTML/JS
+html(mic_meter_html, height=350, scrolling=True)
