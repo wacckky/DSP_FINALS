@@ -1,9 +1,9 @@
 import streamlit as st
-from mic_component import mic_db_component  # ✅ use direct import
+import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Live Mic dB Level")
-st.title("🎤 Web Mic dB Meter (JS-based)")
+st.set_page_config(page_title="Mic dB Level", layout="centered")
+st.title("🎤 Live Microphone dB Meter")
+st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-db_level = mic_db_component()
-if db_level is not None:
-    st.metric("Current dB", f"{db_level:.2f} dB")
+# Embed the hosted mic dB meter
+components.iframe("https://streamlit-mic-db.netlify.app", height=200)
