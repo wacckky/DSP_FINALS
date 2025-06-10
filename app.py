@@ -41,7 +41,6 @@ meter_html = """
     justify-content: space-between;
     height: 250px;
     width: 40px;
-    color: #9ca3af;
     font-size: 0.875rem;
     font-weight: 500;
     user-select: none;
@@ -49,7 +48,7 @@ meter_html = """
 
   .label {
     text-align: right;
-    position: relative;
+    transition: color 0.3s ease;
   }
 
   #meter-wrapper {
@@ -68,9 +67,8 @@ meter_html = """
   #bar {
     width: 100%;
     height: 0%;
-    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
     border-radius: 12px 12px 0 0;
-    transition: height 0.2s ease-out;
+    transition: height 0.2s ease-out, background 0.2s ease-out;
     box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
   }
 
@@ -139,7 +137,6 @@ meter_html = """
     border-radius: 6px;
     cursor: pointer;
   }
-
 </style>
 </head>
 <body>
@@ -161,9 +158,9 @@ meter_html = """
       <div id="bar"></div>
     </div>
     <div id="db-stats">
-      <div id="avg-db">Avg: 0.00 dB</div>
-      <div id="max-db">Max: 0.00 dB</div>
-      <div id="db-value">dB: 0.00</div>
+      <div id="avg-db">Avg: 0 dB</div>
+      <div id="max-db">Max: 0 dB</div>
+      <div id="db-value">dB: 0</div>
       <button id="reset-button">Reset</button>
     </div>
     <div class="overlay" id="overlay">
@@ -191,14 +188,15 @@ function initMic() {
   const avgDbText = document.getElementById("avg-db");
   const maxDbText = document.getElementById("max-db");
   const resetButton = document.getElementById("reset-button");
+  const labelEls = document.querySelectorAll(".label");
 
   let maxDb = -100;
 
   resetButton.onclick = () => {
     dbHistory = [];
     maxDb = -100;
-    avgDbText.textContent = "Avg: 0.00 dB";
-    maxDbText.textContent = "Max: 0.00 dB";
+    avgDbText.textContent = "Avg: 0 dB";
+    maxDbText.textContent = "Max: 0 dB";
   };
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -214,6 +212,12 @@ function initMic() {
       analyser.fftSize = 256;
       source.connect(analyser);
       const dataArray = new Uint8Array(analyser.fftSize);
+
+      function getColorForDb(db) {
+        if (db > -30) return "#ef4444"; // red
+        if (db > -60) return "#facc15"; // yellow
+        return "#10b981"; // green
+      }
 
       function updateMeter() {
         analyser.getByteTimeDomainData(dataArray);
@@ -238,11 +242,15 @@ function initMic() {
         maxDb = Math.max(maxDb, smoothedDb);
 
         const percentage = ((smoothedDb + 100) / 100) * 100;
-        bar.style.height = percentage + "%";
+        const color = getColorForDb(smoothedDb);
 
-        dbValue.textContent = `dB: ${smoothedDb.toFixed(2)}`;
-        avgDbText.textContent = `Avg: ${avgDb.toFixed(2)} dB`;
-        maxDbText.textContent = `Max: ${maxDb.toFixed(2)} dB`;
+        bar.style.height = percentage + "%";
+        bar.style.background = color;
+        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
+        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
+        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
+
+        labelEls.forEach(el => el.style.color = color);
       }
 
       updateMeter();
@@ -264,4 +272,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=400, scrolling=False)
+html(meter_html, height=420, scrolling=False)
