@@ -70,7 +70,7 @@ meter_html = """
     height: 0%;
     background: linear-gradient(to top, #10b981, #facc15, #ef4444);
     border-radius: 12px 12px 0 0;
-    transition: height 0.1s linear;
+    transition: height 0.2s ease-out;
     box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
   }
 
@@ -177,6 +177,7 @@ let lastDb = -100;
 let dbHistory = [];
 const smoothingFactor = 0.3;
 const maxHistoryLength = 50;
+let intervalId = null;
 
 function startApp() {
   document.getElementById("overlay").style.display = "none";
@@ -242,12 +243,13 @@ function initMic() {
         dbValue.textContent = `dB: ${smoothedDb.toFixed(2)}`;
         avgDbText.textContent = `Avg: ${avgDb.toFixed(2)} dB`;
         maxDbText.textContent = `Max: ${maxDb.toFixed(2)} dB`;
-
-        requestAnimationFrame(updateMeter);
       }
 
       updateMeter();
+      intervalId = setInterval(updateMeter, 100);
+
       window.addEventListener('beforeunload', () => {
+        clearInterval(intervalId);
         if (audioCtx.state !== 'closed') audioCtx.close();
       });
 
