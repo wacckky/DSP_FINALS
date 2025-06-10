@@ -5,22 +5,24 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-vertical_meter_html = """
+transparent_meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <title>Live Mic dB Meter</title>
   <style>
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 1rem;
-      background: #f5f5f5;
     }
     #out {
       font-size: 1.8rem;
       margin-bottom: 1rem;
+      color: #333;
     }
     #bar-container {
       width: 30px;
@@ -90,4 +92,4 @@ vertical_meter_html = """
 </html>
 """
 
-html(vertical_meter_html, height=400, scrolling=True)
+html(transparent_meter_html, height=350, scrolling=False)
