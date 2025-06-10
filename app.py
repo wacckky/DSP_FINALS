@@ -2,8 +2,8 @@ import streamlit as st
 from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
-st.title("Love  Meter")
-st.write("luv pag di umabot sigaw mo ng -3 db di mo ako luv")
+st.title("Live Microphone dB Meter")
+st.write("This uses your **browser mic**. Please grant microphone permission when prompted.")
 
 meter_html = """
 <!DOCTYPE html>
