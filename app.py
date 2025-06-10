@@ -18,10 +18,10 @@ meter_html = """
   /* Reset and base */
   html, body {
     margin: 0; padding: 0;
-    background: transparent;
+    background: #ffffff;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
       Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    color: #ffffff;
+    color: #6b7280;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     height: 100%;
@@ -86,7 +86,7 @@ meter_html = """
   #db-value {
     font-weight: 700;
     font-size: 1.1rem;
-    color: #ffffff;
+    color: #111827;
     min-width: 60px;
     text-align: left;
     user-select: none;
@@ -148,6 +148,9 @@ meter_html = """
           source.connect(analyser);
           const dataArray = new Uint8Array(analyser.fftSize);
 
+          let lastDb = -100; // Initialize with a minimum dB value
+          const smoothingFactor = 0.8; // Adjust this value (0.0 - 1.0) for more or less smoothing
+
           function updateMeter() {
             analyser.getByteTimeDomainData(dataArray);
             let sumSquares = 0;
@@ -156,16 +159,20 @@ meter_html = """
               sumSquares += normalized * normalized;
             }
             const rms = Math.sqrt(sumSquares / dataArray.length);
-            const db = 20 * Math.log10(rms + 1e-6); // avoid log(0) by offset
+            let db = 20 * Math.log10(rms + 1e-6); // avoid log(0) by offset
 
             // Clamp dB between -100 and 0 for display
-            const clampedDb = Math.min(0, Math.max(db, -100));
+            db = Math.min(0, Math.max(db, -100));
+
+            // Apply smoothing filter
+            const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * db;
+            lastDb = smoothedDb;
 
             // Map dB to percentage (0% at -100 dB, 100% at 0 dB)
-            const percentage = ((clampedDb + 100) / 100) * 100;
+            const percentage = ((smoothedDb + 100) / 100) * 100;
 
             bar.style.height = percentage + "%";
-            dbValue.textContent = `dB: ${clampedDb.toFixed(2)}`;
+            dbValue.textContent = `dB: ${smoothedDb.toFixed(2)}`;
             outMessage.textContent = "";
           }
 
@@ -190,4 +197,3 @@ meter_html = """
 """
 
 html(meter_html, height=350, scrolling=False)
-
