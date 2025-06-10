@@ -2,8 +2,8 @@ import streamlit as st
 from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
-st.title("🎤 LOVE SHOUT METER")
-st.write("luv pag umabot sigaw mo ng -3db mahal mo ako ")
+st.title("Love  Meter")
+st.write("luv pag di umabot sigaw mo ng -3 db di mo ako luv")
 
 meter_html = """
 <!DOCTYPE html>
@@ -21,7 +21,7 @@ meter_html = """
     background: transparent;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
       Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    color: #ffffff;
+    color: #6b7280;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     height: 100%;
@@ -148,9 +148,6 @@ meter_html = """
           source.connect(analyser);
           const dataArray = new Uint8Array(analyser.fftSize);
 
-          let lastDb = -100; // Initialize with a minimum dB value
-          const smoothingFactor = 0.8; // Adjust this value (0.0 - 1.0) for more or less smoothing
-
           function updateMeter() {
             analyser.getByteTimeDomainData(dataArray);
             let sumSquares = 0;
@@ -159,20 +156,16 @@ meter_html = """
               sumSquares += normalized * normalized;
             }
             const rms = Math.sqrt(sumSquares / dataArray.length);
-            let db = 20 * Math.log10(rms + 1e-6); // avoid log(0) by offset
+            const db = 20 * Math.log10(rms + 1e-6); // avoid log(0) by offset
 
             // Clamp dB between -100 and 0 for display
-            db = Math.min(0, Math.max(db, -100));
-
-            // Apply smoothing filter
-            const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * db;
-            lastDb = smoothedDb;
+            const clampedDb = Math.min(0, Math.max(db, -100));
 
             // Map dB to percentage (0% at -100 dB, 100% at 0 dB)
-            const percentage = ((smoothedDb + 100) / 100) * 100;
+            const percentage = ((clampedDb + 100) / 100) * 100;
 
             bar.style.height = percentage + "%";
-            dbValue.textContent = `dB: ${smoothedDb.toFixed(2)}`;
+            dbValue.textContent = `dB: ${clampedDb.toFixed(2)}`;
             outMessage.textContent = "";
           }
 
@@ -197,3 +190,4 @@ meter_html = """
 """
 
 html(meter_html, height=350, scrolling=False)
+
