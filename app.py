@@ -33,18 +33,20 @@ meter_html = """
   }
 
   .overlay {
-    position: absolute;
-    z-index: 10;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-  }
+  position: absolute;
+  z-index: 10;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: transparent; /* keep background transparent */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
 
   .overlay.hidden {
     display: none;
