@@ -8,33 +8,47 @@ import tempfile
 import soundfile as sf
 
 st.set_page_config(page_title="Sound Level Analyzer", layout="wide")
-st.title("🔊 Audio Recorder & Analyzer")
+st.title("🔊 Audio Analyzer: Upload or Record")
 
-# Session state init
+# Initialize session state
+if "audio_data" not in st.session_state:
+    st.session_state.audio_data = None
 if "audio_ready" not in st.session_state:
     st.session_state.audio_ready = False
 if "analyzed" not in st.session_state:
     st.session_state.analyzed = False
 
-# --- Audio Recorder ---
-st.subheader("🎤 Step 1: Record Audio")
-audio = audiorecorder("Start Recording", "Stop Recording")
+# --- Option Selection ---
+option = st.radio("Choose audio input method:", ["📤 Upload Audio File", "🎤 Record with Microphone"])
 
-if len(audio) > 0:
-    st.audio(audio.tobytes(), format="audio/wav")
-    st.success("✅ Recording complete!")
-    st.session_state.audio_ready = True
-    st.session_state.analyzed = False
+# --- Upload Option ---
+if option == "📤 Upload Audio File":
+    uploaded_file = st.file_uploader("Upload a WAV, MP3, or OGG file", type=["wav", "mp3", "ogg"])
+    if uploaded_file:
+        st.audio(uploaded_file)
+        st.session_state.audio_data = uploaded_file.read()
+        st.session_state.audio_ready = True
+        st.session_state.analyzed = False
+        st.success("✅ File uploaded!")
+
+# --- Record Option ---
+elif option == "🎤 Record with Microphone":
+    audio = audiorecorder("Start Recording", "Stop Recording")
+    if len(audio) > 0:
+        st.audio(audio.tobytes(), format="audio/wav")
+        st.session_state.audio_data = audio.tobytes()
+        st.session_state.audio_ready = True
+        st.session_state.analyzed = False
+        st.success("✅ Recording complete!")
 
 # --- Analyze Button ---
 if st.session_state.audio_ready and not st.session_state.analyzed:
-    if st.button("🔍 Analyze Recording"):
-        # Save to temp file
+    if st.button("🔍 Analyze Audio"):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
-            tmpfile.write(audio.tobytes())
+            tmpfile.write(st.session_state.audio_data)
             tmpfile.flush()
             y, sr = librosa.load(tmpfile.name, sr=None)
-        
+
         # --- dB Analysis ---
         st.subheader("📊 dB Level Over Time")
         frame_size = 2048
@@ -62,13 +76,15 @@ if st.session_state.audio_ready and not st.session_state.analyzed:
         ax.plot(freqs, fft)
         ax.set_xlabel("Frequency (Hz)")
         ax.set_ylabel("Amplitude")
+        ax.set_xlim(0, 8000)
         st.pyplot(fig)
 
         st.session_state.analyzed = True
 
-# --- Retake ---
+# --- Retake / Reset ---
 if st.session_state.audio_ready:
-    if st.button("🔁 Retake Recording"):
+    if st.button("🔁 Retake or Upload New"):
         st.session_state.audio_ready = False
         st.session_state.analyzed = False
+        st.session_state.audio_data = None
         st.experimental_rerun()
