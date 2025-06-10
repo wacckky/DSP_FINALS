@@ -2,9 +2,13 @@ import streamlit as st
 from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
-st.title(" Sound Level Meter")
+st.title("🔊 Sound Level Meter")
 
-meter_html = """
+# Theme selector
+theme_choice = st.selectbox("Select Theme", ["System", "Light", "Dark"])
+custom_theme = theme_choice.lower()
+
+meter_html = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,15 +18,38 @@ meter_html = """
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
 
-  html, body {
+  :root {{
+    --bg-color: #f9fafb;
+    --text-color: #111827;
+    --subtext-color: #6b7280;
+    --border-color: #e5e7eb;
+    --button-bg: #10b981;
+    --button-hover: #059669;
+    --reset-bg: #e5e7eb;
+    --bar-gradient: linear-gradient(to top, #10b981, #facc15, #ef4444);
+  }}
+
+  html[data-theme='dark'] {{
+    --bg-color: #1f2937;
+    --text-color: #f9fafb;
+    --subtext-color: #d1d5db;
+    --border-color: #374151;
+    --button-bg: #10b981;
+    --button-hover: #059669;
+    --reset-bg: #374151;
+    --bar-gradient: linear-gradient(to top, #10b981, #facc15, #ef4444);
+  }}
+
+  html, body {{
     margin: 0; padding: 0;
     background: transparent;
     font-family: 'Poppins', sans-serif;
     height: 100%;
     user-select: none;
-  }
+    color: var(--text-color);
+  }}
 
-  #app-container {
+  #app-container {{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -32,9 +59,9 @@ meter_html = """
     margin: 0 auto;
     padding: 20px;
     position: relative;
-  }
+  }}
 
-  #labels {
+  #labels {{
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -43,65 +70,61 @@ meter_html = """
     font-size: 0.875rem;
     font-weight: 500;
     user-select: none;
-  }
+  }}
 
-  .label {
-    text-align: right;
-  }
+  .label {{ text-align: right; }}
+  .red {{ color: #ef4444; }}
+  .yellow {{ color: #facc15; }}
+  .green {{ color: #10b981; }}
 
-  .red { color: #ef4444; }
-  .yellow { color: #facc15; }
-  .green { color: #10b981; }
-
-  #meter-wrapper {
+  #meter-wrapper {{
     position: relative;
     width: 40px;
     height: 250px;
     border-radius: 12px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.08);
-    border: 1.5px solid #e5e7eb;
-    background: #f9fafb;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-color);
     overflow: hidden;
     display: flex;
     align-items: flex-end;
-  }
+  }}
 
-  #bar {
+  #bar {{
     width: 100%;
     height: 0%;
-    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
+    background: var(--bar-gradient);
     border-radius: 12px 12px 0 0;
     transition: height 0.2s ease-out;
     box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
-  }
+  }}
 
-  #db-stats {
+  #db-stats {{
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     margin-left: 16px;
-  }
+  }}
 
-  #avg-db, #max-db {
+  #avg-db, #max-db {{
     font-size: 0.9rem;
-    color: #6b7280;
-  }
+    color: var(--subtext-color);
+  }}
 
-  #db-value {
+  #db-value {{
     font-weight: 700;
     font-size: 1.1rem;
-    color: #111827;
-  }
+    color: var(--text-color);
+  }}
 
-  #out-message {
+  #out-message {{
     color: #ef4444;
     font-weight: 600;
     margin-top: 15px;
     text-align: center;
-  }
+  }}
 
-  .overlay {
+  .overlay {{
     position: absolute;
     z-index: 10;
     top: 0; left: 0;
@@ -114,32 +137,33 @@ meter_html = """
     justify-content: center;
     align-items: center;
     flex-direction: column;
-  }
+  }}
 
-  .overlay button {
+  .overlay button {{
     padding: 10px 24px;
     font-size: 1.2rem;
-    background: #10b981;
+    background: var(--button-bg);
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s ease;
-  }
+  }}
 
-  .overlay button:hover {
-    background: #059669;
-  }
+  .overlay button:hover {{
+    background: var(--button-hover);
+  }}
 
-  #reset-button {
+  #reset-button {{
     margin-top: 10px;
     font-size: 0.8rem;
     padding: 4px 12px;
-    background: #e5e7eb;
+    background: var(--reset-bg);
     border: none;
     border-radius: 6px;
+    color: var(--text-color);
     cursor: pointer;
-  }
+  }}
 </style>
 </head>
 <body>
@@ -179,12 +203,12 @@ const smoothingFactor = 0.3;
 const maxHistoryLength = 50;
 let intervalId = null;
 
-function startApp() {
+function startApp() {{
   document.getElementById("overlay").style.display = "none";
   initMic();
-}
+}}
 
-function initMic() {
+function initMic() {{
   const outMessage = document.getElementById('out-message');
   const bar = document.getElementById("bar");
   const dbValue = document.getElementById("db-value");
@@ -194,20 +218,20 @@ function initMic() {
 
   let maxDb = -100;
 
-  resetButton.onclick = () => {
+  resetButton.onclick = () => {{
     dbHistory = [];
     maxDb = -100;
     avgDbText.textContent = "Avg: 0 dB";
     maxDbText.textContent = "Max: 0 dB";
-  };
+  }};
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
     outMessage.textContent = "getUserMedia not supported by your browser.";
     return;
-  }
+  }}
 
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
+  navigator.mediaDevices.getUserMedia({{ audio: true }})
+    .then(stream => {{
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
@@ -215,13 +239,13 @@ function initMic() {
       source.connect(analyser);
       const dataArray = new Uint8Array(analyser.fftSize);
 
-      function updateMeter() {
+      function updateMeter() {{
         analyser.getByteTimeDomainData(dataArray);
         let sumSquares = 0;
-        for (let i = 0; i < dataArray.length; i++) {
+        for (let i = 0; i < dataArray.length; i++) {{
           const normalized = (dataArray[i] - 128) / 128;
           sumSquares += normalized * normalized;
-        }
+        }}
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
         db = Math.min(0, Math.max(db, -100));
@@ -238,25 +262,34 @@ function initMic() {
         const percentage = ((smoothedDb + 100) / 100) * 100;
 
         bar.style.height = percentage + "%";
-        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
-        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
-        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
-      }
+        dbValue.textContent = `dB: ${{Math.round(smoothedDb)}}`;
+        avgDbText.textContent = `Avg: ${{Math.round(avgDb)}} dB`;
+        maxDbText.textContent = `Max: ${{Math.round(maxDb)}} dB`;
+      }}
 
       updateMeter();
       intervalId = setInterval(updateMeter, 100);
 
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener('beforeunload', () => {{
         clearInterval(intervalId);
         if (audioCtx.state !== 'closed') audioCtx.close();
-      });
+      }});
 
-    })
-    .catch(err => {
+    }})
+    .catch(err => {{
       outMessage.textContent = "Microphone access denied.";
       console.error(err);
-    });
-}
+    }});
+}}
+
+// Set theme manually
+(function() {{
+  let theme = "{custom_theme}";
+  if (theme === "system") {{
+    theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }}
+  document.documentElement.setAttribute("data-theme", theme);
+}})();
 </script>
 </body>
 </html>
