@@ -5,30 +5,47 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-transparent_meter_html = """
+labeled_meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Live Mic dB Meter</title>
+  <title>Labeled Mic dB Meter</title>
   <style>
-    /* Make everything fully see-through */
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background: transparent !important;
       overflow: hidden;
       font-family: Arial, sans-serif;
     }
-
-    /* Your dB readout */
-    #out {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
+    #wrapper {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 300px;
+      position: relative;
+    }
+    #labels {
+      position: relative;
+      width: 40px;
+      height: 250px;
+      margin-right: 8px;
+    }
+    .label {
+      position: absolute;
+      left: 0;
+      transform: translateY(50%);
+      font-size: 0.8rem;
       color: #333;
     }
+    /* Position each label by percentage of the 250px height */
+    .label:nth-child(1) { bottom:   0%; } /* –100 dB */
+    .label:nth-child(2) { bottom:  20%; } /* –80  dB */
+    .label:nth-child(3) { bottom:  40%; } /* –60  dB */
+    .label:nth-child(4) { bottom:  60%; } /* –40  dB */
+    .label:nth-child(5) { bottom:  80%; } /* –20  dB */
+    .label:nth-child(6) { bottom: 100%; } /*  0   dB */
 
-    /* Container is now transparent with a subtle border */
     #bar-container {
       width: 30px;
       height: 250px;
@@ -36,11 +53,8 @@ transparent_meter_html = """
       border: 2px solid rgba(0,0,0,0.2);
       border-radius: 15px;
       overflow: hidden;
-      margin: 0 auto;
       position: relative;
     }
-
-    /* Gradient bar as before */
     #bar {
       width: 100%;
       height: 0%;
@@ -50,21 +64,39 @@ transparent_meter_html = """
       transition: height 0.15s ease-out;
       transform-origin: bottom;
     }
+    #out {
+      position: absolute;
+      top: -2rem;
+      font-size: 1.2rem;
+      color: #333;
+      width: 100%;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div id="out">dB: 0.00</div>
-  <div id="bar-container">
-    <div id="bar"></div>
+  <div id="wrapper">
+    <div id="out">dB: 0.00</div>
+    <div id="labels">
+      <div class="label">–100</div>
+      <div class="label">–80</div>
+      <div class="label">–60</div>
+      <div class="label">–40</div>
+      <div class="label">–20</div>
+      <div class="label">0</div>
+    </div>
+    <div id="bar-container">
+      <div id="bar"></div>
+    </div>
   </div>
 
   <script>
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       document.getElementById("out").innerText = "getUserMedia not supported";
     } else {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
           const source = audioCtx.createMediaStreamSource(stream);
           const analyser = audioCtx.createAnalyser();
           analyser.fftSize = 2048;
@@ -74,9 +106,9 @@ transparent_meter_html = """
           function updateMeter() {
             analyser.getByteTimeDomainData(dataArray);
             let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-              let v = (dataArray[i] - 128) / 128;
-              sum += v * v;
+            for (let v of dataArray) {
+              const norm = (v - 128) / 128;
+              sum += norm*norm;
             }
             const rms = Math.sqrt(sum / dataArray.length);
             const db = 20 * Math.log10(rms + 1e-6);
@@ -90,8 +122,8 @@ transparent_meter_html = """
           setInterval(updateMeter, 200);
         })
         .catch(err => {
-          document.getElementById("out").innerText = "Mic access denied or unavailable";
-          console.error("getUserMedia error:", err);
+          document.getElementById("out").innerText = "Mic access denied";
+          console.error(err);
         });
     }
   </script>
@@ -99,5 +131,4 @@ transparent_meter_html = """
 </html>
 """
 
-# Embed with no scrolling
-html(transparent_meter_html, height=350, scrolling=False)
+html(labeled_meter_html, height=350, scrolling=False)
