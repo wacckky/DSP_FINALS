@@ -35,7 +35,7 @@ clean_labeled_meter_html = """
       width: 30px;
     }
 
-    .label {
+   .label {
       position: absolute;
       left: 0;
       transform: translateY(50%);
@@ -43,12 +43,17 @@ clean_labeled_meter_html = """
       color: #333;
     }
 
-    .label:nth-child(1) { bottom:   0%; }  /* -100 dB */
-    .label:nth-child(2) { bottom:  20%; }  /* -80 dB */
-    .label:nth-child(3) { bottom:  40%; }  /* -60 dB */
-    .label:nth-child(4) { bottom:  60%; }  /* -40 dB */
-    .label:nth-child(5) { bottom:  80%; }  /* -20 dB */
-    .label:nth-child(6) { bottom: 100%; }  /*   0 dB */
+    .label:nth-child(1) { bottom:   0%; }   /* -100 dB */
+    .label:nth-child(2) { bottom:  10%; }   /* -90 dB */
+    .label:nth-child(3) { bottom:  20%; }   /* -80 dB */
+    .label:nth-child(4) { bottom:  30%; }   /* -70 dB */
+    .label:nth-child(5) { bottom:  40%; }   /* -60 dB */
+    .label:nth-child(6) { bottom:  50%; }   /* -50 dB */
+    .label:nth-child(7) { bottom:  60%; }   /* -40 dB */
+    .label:nth-child(8) { bottom:  70%; }   /* -30 dB */
+    .label:nth-child(9) { bottom:  80%; }   /* -20 dB */
+    .label:nth-child(10) { bottom: 90%; }   /* -10 dB */
+    .label:nth-child(11) { bottom: 100%; }  /*   0 dB */
 
     #bar-container {
       position: relative;
@@ -83,10 +88,15 @@ clean_labeled_meter_html = """
   <div id="container">
     <div id="labels">
       <div class="label">–100</div>
+      <div class="label">–90</div>
       <div class="label">–80</div>
+      <div class="label">–70</div>
       <div class="label">–60</div>
+      <div class="label">–50</div>
       <div class="label">–40</div>
+      <div class="label">–30</div>
       <div class="label">–20</div>
+      <div class="label">–10</div>
       <div class="label">0</div>
     </div>
     <div id="bar-container">
