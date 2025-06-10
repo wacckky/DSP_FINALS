@@ -4,11 +4,7 @@ from streamlit.components.v1 import html
 st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🔊 Sound Level Meter")
 
-# Theme selector
-theme_choice = st.selectbox("Select Theme", ["System", "Light", "Dark"])
-custom_theme = theme_choice.lower()
-
-meter_html = f"""
+meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,15 +25,17 @@ meter_html = f"""
     --bar-gradient: linear-gradient(to top, #10b981, #facc15, #ef4444);
   }}
 
-  html[data-theme='dark'] {{
-    --bg-color: #1f2937;
-    --text-color: #f9fafb;
-    --subtext-color: #d1d5db;
-    --border-color: #374151;
-    --button-bg: #10b981;
-    --button-hover: #059669;
-    --reset-bg: #374151;
-    --bar-gradient: linear-gradient(to top, #10b981, #facc15, #ef4444);
+  @media (prefers-color-scheme: dark) {{
+    :root {{
+      --bg-color: #1f2937;
+      --text-color: #f9fafb;
+      --subtext-color: #d1d5db;
+      --border-color: #374151;
+      --button-bg: #10b981;
+      --button-hover: #059669;
+      --reset-bg: #374151;
+      --bar-gradient: linear-gradient(to top, #10b981, #facc15, #ef4444);
+    }}
   }}
 
   html, body {{
@@ -281,15 +279,6 @@ function initMic() {{
       console.error(err);
     }});
 }}
-
-// Set theme manually
-(function() {{
-  let theme = "{custom_theme}";
-  if (theme === "system") {{
-    theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }}
-  document.documentElement.setAttribute("data-theme", theme);
-}})();
 </script>
 </body>
 </html>
