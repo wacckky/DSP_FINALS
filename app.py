@@ -6,4 +6,4 @@ st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
 # Embed the hosted mic dB meter
-components.iframe("https://streamlit-mic-db.netlify.app", height=200)
+components.iframe("https://wacckky.github.io/host/", height=200)
