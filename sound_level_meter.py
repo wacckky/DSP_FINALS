@@ -1,45 +1,50 @@
 import streamlit as st
 import sounddevice as sd
 import numpy as np
-import threading
 import time
 
-# Streamlit page config
 st.set_page_config(page_title="Real-Time Sound Level Meter", layout="centered")
-
 st.title("🎤 Real-Time Sound Level Meter")
-st.write("This app measures real-time sound levels from your microphone in decibels (dB).")
 
-# Global variable to store dB level
-sound_level = st.empty()
+st.write("This app uses your microphone to measure and plot real-time dB levels.")
 
-# Streamlit checkbox to toggle measurement
-start_measurement = st.checkbox("Start Measuring")
-
-# Parameters
-duration = 0.2  # in seconds
+# Settings
+duration = 0.2  # seconds
 sample_rate = 44100
+window_size = 30  # number of readings shown in chart
 
-def calculate_rms(block):
-    return np.sqrt(np.mean(block**2))
+# Initialize placeholders
+start_button = st.button("Start Measuring")
+chart = st.line_chart()
+db_display = st.empty()
 
-def audio_callback(indata, frames, time, status):
-    global db_level
-    if status:
-        print(status)
-    rms = calculate_rms(indata)
-    db_level = 20 * np.log10(rms + 1e-6)  # avoid log(0)
+def calculate_db(indata):
+    rms = np.sqrt(np.mean(indata**2))
+    db = 20 * np.log10(rms + 1e-6)  # +1e-6 to avoid log(0)
+    return db
 
-def audio_thread():
-    with sd.InputStream(callback=audio_callback, channels=1, samplerate=sample_rate, blocksize=int(duration * sample_rate)):
-        while start_measurement:
-            time.sleep(duration)
-            sound_level.metric(label="Current dB Level", value=f"{db_level:.2f} dB")
+def measure_sound():
+    db_levels = []
 
-if start_measurement:
-    db_level = 0.0
-    t = threading.Thread(target=audio_thread)
-    t.start()
-else:
-    st.write("👈 Click the checkbox to start measuring.")
+    with sd.InputStream(channels=1, samplerate=sample_rate, blocksize=int(sample_rate * duration)) as stream:
+        while True:
+            try:
+                audio_data, _ = stream.read(int(sample_rate * duration))
+                db = calculate_db(audio_data)
+                db_levels.append(db)
 
+                # Keep only recent values
+                if len(db_levels) > window_size:
+                    db_levels.pop(0)
+
+                # Update UI
+                chart.line_chart(db_levels)
+                db_display.metric("Current dB", f"{db:.2f} dB")
+                time.sleep(duration)
+            except Exception as e:
+                st.error(f"Error: {e}")
+                break
+
+if start_button:
+    st.info("🔴 Measuring live... speak into your microphone.")
+    measure_sound()
