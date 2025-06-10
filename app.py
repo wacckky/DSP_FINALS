@@ -48,8 +48,11 @@ meter_html = """
 
   .label {
     text-align: right;
-    transition: color 0.3s ease;
   }
+
+  .red { color: #ef4444; }
+  .yellow { color: #facc15; }
+  .green { color: #10b981; }
 
   #meter-wrapper {
     position: relative;
@@ -67,8 +70,9 @@ meter_html = """
   #bar {
     width: 100%;
     height: 0%;
+    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
     border-radius: 12px 12px 0 0;
-    transition: height 0.2s ease-out, background 0.2s ease-out;
+    transition: height 0.2s ease-out;
     box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
   }
 
@@ -142,17 +146,17 @@ meter_html = """
 <body>
   <div id="app-container">
     <div id="labels">
-      <div class="label">0</div>
-      <div class="label">-10</div>
-      <div class="label">-20</div>
-      <div class="label">-30</div>
-      <div class="label">-40</div>
-      <div class="label">-50</div>
-      <div class="label">-60</div>
-      <div class="label">-70</div>
-      <div class="label">-80</div>
-      <div class="label">-90</div>
-      <div class="label">-100</div>
+      <div class="label red">0</div>
+      <div class="label red">-10</div>
+      <div class="label red">-20</div>
+      <div class="label red">-30</div>
+      <div class="label yellow">-40</div>
+      <div class="label yellow">-50</div>
+      <div class="label yellow">-60</div>
+      <div class="label green">-70</div>
+      <div class="label green">-80</div>
+      <div class="label green">-90</div>
+      <div class="label green">-100</div>
     </div>
     <div id="meter-wrapper">
       <div id="bar"></div>
@@ -188,7 +192,6 @@ function initMic() {
   const avgDbText = document.getElementById("avg-db");
   const maxDbText = document.getElementById("max-db");
   const resetButton = document.getElementById("reset-button");
-  const labelEls = document.querySelectorAll(".label");
 
   let maxDb = -100;
 
@@ -213,12 +216,6 @@ function initMic() {
       source.connect(analyser);
       const dataArray = new Uint8Array(analyser.fftSize);
 
-      function getColorForDb(db) {
-        if (db > -30) return "#ef4444"; // red
-        if (db > -60) return "#facc15"; // yellow
-        return "#10b981"; // green
-      }
-
       function updateMeter() {
         analyser.getByteTimeDomainData(dataArray);
         let sumSquares = 0;
@@ -234,23 +231,17 @@ function initMic() {
         lastDb = smoothedDb;
 
         dbHistory.push(smoothedDb);
-        if (dbHistory.length > maxHistoryLength) {
-          dbHistory.shift();
-        }
+        if (dbHistory.length > maxHistoryLength) dbHistory.shift();
 
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
 
         const percentage = ((smoothedDb + 100) / 100) * 100;
-        const color = getColorForDb(smoothedDb);
 
         bar.style.height = percentage + "%";
-        bar.style.background = color;
         dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
         avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
         maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
-
-        labelEls.forEach(el => el.style.color = color);
       }
 
       updateMeter();
