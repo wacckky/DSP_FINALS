@@ -1,9 +1,7 @@
 streamlit
+streamlit-audiorecorder
 librosa
 numpy
-soundfile
-matplotlib
 altair
-streamlit-webrtc
-av
-
+matplotlib
+soundfile
