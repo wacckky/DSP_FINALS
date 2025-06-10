@@ -5,7 +5,7 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.title("🎤 Live Microphone dB Meter")
 st.write("This uses your **browser mic**. Grant permission when prompted.")
 
-labeled_meter_html = """
+clean_labeled_meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,48 +13,53 @@ labeled_meter_html = """
   <title>Labeled Mic dB Meter</title>
   <style>
     html, body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       background: transparent !important;
       overflow: hidden;
       font-family: Arial, sans-serif;
     }
-    #wrapper {
+
+    #container {
       display: flex;
-      align-items: flex-end;
       justify-content: center;
-      height: 300px;
+      align-items: flex-end;
+      gap: 10px;
+      height: 280px;
       position: relative;
     }
+
     #labels {
       position: relative;
-      width: 40px;
       height: 250px;
-      margin-right: 8px;
+      width: 30px;
     }
+
     .label {
       position: absolute;
       left: 0;
       transform: translateY(50%);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #333;
     }
-    /* Position each label by percentage of the 250px height */
-    .label:nth-child(1) { bottom:   0%; } /* –100 dB */
-    .label:nth-child(2) { bottom:  20%; } /* –80  dB */
-    .label:nth-child(3) { bottom:  40%; } /* –60  dB */
-    .label:nth-child(4) { bottom:  60%; } /* –40  dB */
-    .label:nth-child(5) { bottom:  80%; } /* –20  dB */
-    .label:nth-child(6) { bottom: 100%; } /*  0   dB */
+
+    .label:nth-child(1) { bottom:   0%; }  /* -100 dB */
+    .label:nth-child(2) { bottom:  20%; }  /* -80 dB */
+    .label:nth-child(3) { bottom:  40%; }  /* -60 dB */
+    .label:nth-child(4) { bottom:  60%; }  /* -40 dB */
+    .label:nth-child(5) { bottom:  80%; }  /* -20 dB */
+    .label:nth-child(6) { bottom: 100%; }  /*   0 dB */
 
     #bar-container {
+      position: relative;
       width: 30px;
       height: 250px;
-      background: transparent !important;
-      border: 2px solid rgba(0,0,0,0.2);
+      border: 2px solid rgba(0, 0, 0, 0.2);
       border-radius: 15px;
+      background: transparent;
       overflow: hidden;
-      position: relative;
     }
+
     #bar {
       width: 100%;
       height: 0%;
@@ -64,19 +69,18 @@ labeled_meter_html = """
       transition: height 0.15s ease-out;
       transform-origin: bottom;
     }
+
     #out {
-      position: absolute;
-      top: -2rem;
-      font-size: 1.2rem;
-      color: #333;
-      width: 100%;
       text-align: center;
+      margin-top: -20px;
+      font-size: 1rem;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <div id="wrapper">
-    <div id="out">dB: 0.00</div>
+  <div id="out">dB: 0.00</div>
+  <div id="container">
     <div id="labels">
       <div class="label">–100</div>
       <div class="label">–80</div>
@@ -96,7 +100,7 @@ labeled_meter_html = """
     } else {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
-          const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           const source = audioCtx.createMediaStreamSource(stream);
           const analyser = audioCtx.createAnalyser();
           analyser.fftSize = 2048;
@@ -108,7 +112,7 @@ labeled_meter_html = """
             let sum = 0;
             for (let v of dataArray) {
               const norm = (v - 128) / 128;
-              sum += norm*norm;
+              sum += norm * norm;
             }
             const rms = Math.sqrt(sum / dataArray.length);
             const db = 20 * Math.log10(rms + 1e-6);
@@ -131,4 +135,4 @@ labeled_meter_html = """
 </html>
 """
 
-html(labeled_meter_html, height=350, scrolling=False)
+html(clean_labeled_meter_html, height=330, scrolling=False)
