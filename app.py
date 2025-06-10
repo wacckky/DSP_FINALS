@@ -86,7 +86,7 @@ meter_html = """
   #db-value {
     font-weight: 700;
     font-size: 1.1rem;
-    color: #111827;
+    color: #ffffff;
     min-width: 60px;
     text-align: left;
     user-select: none;
