@@ -19,11 +19,11 @@ if "analyzed" not in st.session_state:
     st.session_state.analyzed = False
 
 # --- Option Selection ---
-option = st.radio("Choose audio input method:", ["📤 Upload Audio File", "🎤 Record with Microphone"])
+option = st.radio("Choose audio input method:", ["📤 Upload WAV File", "🎤 Record with Microphone"])
 
 # --- Upload Option ---
-if option == "📤 Upload Audio File":
-    uploaded_file = st.file_uploader("Upload a WAV, MP3, or OGG file", type=["wav", "mp3", "ogg"])
+if option == "📤 Upload WAV File":
+    uploaded_file = st.file_uploader("Upload a WAV file only", type=["wav"])
     if uploaded_file:
         st.audio(uploaded_file)
         st.session_state.audio_data = uploaded_file.read()
