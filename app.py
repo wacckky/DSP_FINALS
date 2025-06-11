@@ -1,4 +1,50 @@
-meter_html = f"""
+import streamlit as st
+from streamlit.components.v1 import html
+
+st.set_page_config(page_title="Mic dB Level", layout="centered")
+
+# Initialize session state for smoothing factor if it doesn't exist
+if 'smoothing_factor' not in st.session_state:
+    st.session_state['smoothing_factor'] = 0.3
+
+# Create a slider for the smoothing factor
+smoothing_factor = st.slider(
+    "Smoothing Factor",
+    min_value=0.0,
+    max_value=0.99,
+    value=st.session_state['smoothing_factor'],
+    step=0.01,
+    key="smoothing_slider",  # Add a key for the slider
+    help="Adjust the smoothing of the dB readings.  Lower values are more responsive, higher values are smoother."
+)
+
+# Update session state with the slider value
+st.session_state['smoothing_factor'] = smoothing_factor
+
+# Inject CSS to set background color and title style
+st.markdown(
+    """
+    <style>
+    /* Target the main Streamlit app area */
+    .stApp {
+        background-color: black !important;
+        color: white !important;
+    }
+    /* Target the title specifically */
+    .streamlit-title {
+        font-size: 3em !important; /* Use !important to ensure override */
+        font-weight: bold !important;
+        color: white !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Use markdown for the title
+st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
+
+meter_html = rf"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -176,12 +222,12 @@ const smoothingFactor = parseFloat('{st.session_state.smoothing_factor}');
 const maxHistoryLength = 50;
 let intervalId = null;
 
-function startApp() {
+function startApp() {{
   document.getElementById("overlay").style.display = "none";
   initMic();
-}
+}}
 
-function initMic() {
+function initMic() {{
   const outMessage = document.getElementById('out-message');
   const bar = document.getElementById("bar");
   const dbValue = document.getElementById("db-value");
@@ -191,20 +237,20 @@ function initMic() {
 
   let maxDb = -100;
 
-  resetButton.onclick = () => {
+  resetButton.onclick = () => {{
     dbHistory = [];
     maxDb = -100;
     avgDbText.textContent = "Avg: 0 dB";
     maxDbText.textContent = "Max: 0 dB";
-  };
+  }};
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {{
     outMessage.textContent = "getUserMedia not supported by your browser.";
     return;
-  }
+  }}
 
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
+  navigator.mediaDevices.getUserMedia({{ audio: true }})
+    .then(stream => {{
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
@@ -212,13 +258,13 @@ function initMic() {
       source.connect(analyser);
       const dataArray = new Uint8Array(analyser.fftSize);
 
-      function updateMeter() {
+      function updateMeter() {{
         analyser.getByteTimeDomainData(dataArray);
         let sumSquares = 0;
-        for (let i = 0; i < dataArray.length; i++) {
+        for (let i = 0; i < dataArray.length; i++) {{
           const normalized = (dataArray[i] - 128) / 128;
           sumSquares += normalized * normalized;
-        }
+        }}
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
         db = Math.min(0, Math.max(db, -100));
@@ -238,22 +284,22 @@ function initMic() {
         dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
         avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
         maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
-      }
+      }}
 
       updateMeter();
       intervalId = setInterval(updateMeter, 100);
 
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener('beforeunload', () => {{
         clearInterval(intervalId);
         if (audioCtx.state !== 'closed') audioCtx.close();
-      });
+      }});
 
-    })
-    .catch(err => {
+    }})
+    .catch(err => {{
       outMessage.textContent = "Microphone access denied.";
       console.error(err);
-    });
-}
+    }});
+}}
 </script>
 </body>
 </html>
