@@ -1,32 +1,40 @@
 import streamlit as st
 from streamlit.components.v1 import html
 
-st.set_page_config(page_title="Sound Level Meter", layout="centered")
+st.set_page_config(page_title="Mic dB Level", layout="centered")
 
 st.markdown(
     """
     <style>
-      .stApp {
-        background-color: black;
-        color: white;
-      }
+    .stApp {
+        background-color: black !important;
+        color: white !important;
+    }
+    .streamlit-title {
+        font-size: 3em !important;
+        font-weight: bold !important;
+        color: white !important;
+    }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-st.markdown("<h1 style='text-align:center; color:white;'>Sound Level Meter</h1>", unsafe_allow_html=True)
+st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
 meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <style>
-  body {
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+  html, body {
+    margin: 0; padding: 0;
     background: transparent;
+    font-family: 'Poppins', sans-serif;
     color: white;
-    font-family: Arial, sans-serif;
     user-select: none;
   }
 
@@ -34,166 +42,264 @@ meter_html = """
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 320px;
-    max-width: 500px;
-    margin: 40px auto;
+    height: 280px;
+    max-width: 480px;
+    margin: 50px auto 0;
     position: relative;
   }
 
   #labels {
-    height: 280px;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     justify-content: space-between;
+    height: 250px;
+    width: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
     margin-right: 10px;
+    position: relative;
   }
 
-  .label-row {
-    display: flex;
-    align-items: center;
-    font-size: 0.8rem;
+  .label {
+    text-align: right;
+    padding-right: 5px;
+    position: relative;
   }
 
-  .tick {
-    width: 8px;
-    height: 1px;
-    background: white;
-    margin-right: 6px;
+  .label::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    width: 6px;
+    height: 2px;
+    background-color: white;
+    transform: translateY(-50%);
   }
+
+  .red { color: #ef4444; }
+  .yellow { color: #facc15; }
+  .green { color: #10b981; }
 
   #meter-wrapper {
     position: relative;
     width: 50px;
-    height: 280px;
+    height: 250px;
+    border-radius: 14px;
     background: #1f2937;
-    border-radius: 12px;
     border: 2px solid #374151;
     overflow: hidden;
+    margin: 0 20px;
     display: flex;
     align-items: flex-end;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
   }
 
   #bar {
     width: 100%;
-    height: 0;
-    background: linear-gradient(to top, red, yellow, green);
-    transition: height 0.1s ease-out;
-    border-radius: 0 0 12px 12px;
+    height: 0%;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(to top, #ef4444, #facc15, #10b981);
+    box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
+    transition: height 0.2s ease-out;
   }
 
   #db-stats {
-    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  #avg-db, #max-db {
     font-size: 0.9rem;
+    color: #9ca3af;
   }
 
-  #db-stats div {
-    margin-bottom: 8px;
-  }
-
-  button {
-    padding: 6px 12px;
-    margin-top: 10px;
-    background: #10b981;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+  #db-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ffffff;
   }
 
   #out-message {
-    text-align: center;
-    margin-top: 10px;
     color: #ef4444;
+    font-weight: 600;
+    margin-top: 15px;
+    text-align: center;
+  }
+
+  .overlay {
+    position: absolute;
+    z-index: 10;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .overlay button {
+    padding: 10px 24px;
+    font-size: 1.2rem;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .overlay button:hover {
+    background: #059669;
+  }
+
+  #reset-button {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    background: #e5e7eb;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: black;
   }
 </style>
 </head>
 <body>
-<div id="app-container">
-  <div id="labels">
-    <div class="label-row"><div class="tick"></div><div>130</div></div>
-    <div class="label-row"><div class="tick"></div><div>120</div></div>
-    <div class="label-row"><div class="tick"></div><div>110</div></div>
-    <div class="label-row"><div class="tick"></div><div>100</div></div>
-    <div class="label-row"><div class="tick"></div><div>90</div></div>
-    <div class="label-row"><div class="tick"></div><div>80</div></div>
-    <div class="label-row"><div class="tick"></div><div>70</div></div>
-    <div class="label-row"><div class="tick"></div><div>60</div></div>
-    <div class="label-row"><div class="tick"></div><div>50</div></div>
-    <div class="label-row"><div class="tick"></div><div>40</div></div>
-    <div class="label-row"><div class="tick"></div><div>30</div></div>
-    <div class="label-row"><div class="tick"></div><div>20</div></div>
-    <div class="label-row"><div class="tick"></div><div>10</div></div>
-  </div>
 
-  <div id="meter-wrapper">
-    <div id="bar"></div>
-  </div>
+  <div id="app-container">
+    <div id="labels">
+      <div class="label red">130</div>
+      <div class="label red">120</div>
+      <div class="label red">110</div>
+      <div class="label yellow">100</div>
+      <div class="label yellow">90</div>
+      <div class="label yellow">80</div>
+      <div class="label green">70</div>
+      <div class="label green">60</div>
+      <div class="label green">50</div>
+      <div class="label green">40</div>
+      <div class="label green">30</div>
+      <div class="label green">20</div>
+      <div class="label green">10</div>
+    </div>
 
-  <div id="db-stats">
-    <div id="avg-db">Avg: 0 dB</div>
-    <div id="max-db">Max: 0 dB</div>
-    <div id="db-value">dB: 0</div>
-    <button onclick="resetMeter()">Reset</button>
+    <div id="meter-wrapper">
+      <div id="bar"></div>
+    </div>
+
+    <div id="db-stats">
+      <div id="avg-db">Avg: 0 dB</div>
+      <div id="max-db">Max: 0 dB</div>
+      <div id="db-value">dB: 0</div>
+      <button id="reset-button">Reset</button>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <button onclick="startApp()">Start</button>
+    </div>
   </div>
-</div>
-<div id="out-message"></div>
+  <div id="out-message"></div>
 
 <script>
-  let lastDb = 0, dbHistory = [], maxDb = 0;
-  const smoothing = 0.3;
+let lastDb = 0;
+let dbHistory = [];
+const smoothingFactor = 0.3;
+const maxHistoryLength = 50;
+let intervalId = null;
 
-  function resetMeter() {
+function startApp() {
+  document.getElementById("overlay").style.display = "none";
+  initMic();
+}
+
+function initMic() {
+  const outMessage = document.getElementById('out-message');
+  const bar = document.getElementById("bar");
+  const dbValue = document.getElementById("db-value");
+  const avgDbText = document.getElementById("avg-db");
+  const maxDbText = document.getElementById("max-db");
+  const resetButton = document.getElementById("reset-button");
+
+  let maxDb = 0;
+
+  resetButton.onclick = () => {
     dbHistory = [];
+    lastDb = 0;
     maxDb = 0;
-    document.getElementById("bar").style.height = "0%";
-    document.getElementById("db-value").textContent = "dB: 0";
-    document.getElementById("avg-db").textContent = "Avg: 0 dB";
-    document.getElementById("max-db").textContent = "Max: 0 dB";
+    bar.style.transition = "height 0.3s ease-in-out";
+    bar.style.height = "0%";
+    dbValue.textContent = "dB: 0";
+    avgDbText.textContent = "Avg: 0 dB";
+    maxDbText.textContent = "Max: 0 dB";
+  };
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    outMessage.textContent = "getUserMedia not supported by your browser.";
+    return;
   }
 
-  if (navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({audio: true}).then(function(stream) {
-      const audioCtx = new AudioContext();
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
       source.connect(analyser);
-      const data = new Uint8Array(analyser.fftSize);
+      const dataArray = new Uint8Array(analyser.fftSize);
 
-      setInterval(() => {
-        analyser.getByteTimeDomainData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          const normalized = (data[i] - 128) / 128;
-          sum += normalized * normalized;
+      function updateMeter() {
+        analyser.getByteTimeDomainData(dataArray);
+        let sumSquares = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          const normalized = (dataArray[i] - 128) / 128;
+          sumSquares += normalized * normalized;
         }
-        const rms = Math.sqrt(sum / data.length);
-        let db = 20 * Math.log10(rms + 1e-6) + 130;
-        db = Math.max(0, Math.min(130, db));
+        const rms = Math.sqrt(sumSquares / dataArray.length);
+        let db = 20 * Math.log10(rms + 1e-6);
+        db = Math.max(10, Math.min(db + 100, 130)); // Normalize to 10–130 dB range
 
-        const smoothDb = smoothing * lastDb + (1 - smoothing) * db;
-        lastDb = smoothDb;
-        dbHistory.push(smoothDb);
-        if (dbHistory.length > 50) dbHistory.shift();
-        const avg = dbHistory.reduce((a,b) => a+b, 0) / dbHistory.length;
-        maxDb = Math.max(maxDb, smoothDb);
+        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * db;
+        lastDb = smoothedDb;
 
-        const heightPct = (smoothDb / 130) * 100;
-        document.getElementById("bar").style.height = heightPct + "%";
+        dbHistory.push(smoothedDb);
+        if (dbHistory.length > maxHistoryLength) dbHistory.shift();
 
-        document.getElementById("db-value").textContent = "dB: " + Math.round(smoothDb);
-        document.getElementById("avg-db").textContent = "Avg: " + Math.round(avg) + " dB";
-        document.getElementById("max-db").textContent = "Max: " + Math.round(maxDb) + " dB";
-      }, 100);
-    }).catch(function(err) {
-      document.getElementById("out-message").textContent = "Microphone access denied.";
+        const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
+        maxDb = Math.max(maxDb, smoothedDb);
+
+        const percentage = ((smoothedDb - 10) / 120) * 100;
+
+        bar.style.transition = "height 0.15s ease-out";
+        bar.style.height = percentage + "%";
+        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
+        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
+        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
+      }
+
+      updateMeter();
+      intervalId = setInterval(updateMeter, 100);
+
+      window.addEventListener('beforeunload', () => {
+        clearInterval(intervalId);
+        if (audioCtx.state !== 'closed') audioCtx.close();
+      });
+
+    })
+    .catch(err => {
+      outMessage.textContent = "Microphone access denied.";
+      console.error(err);
     });
-  } else {
-    document.getElementById("out-message").textContent = "Microphone not supported.";
-  }
+}
 </script>
 </body>
 </html>
 """
 
-html(meter_html, height=560, scrolling=False)
+html(meter_html, height=500, scrolling=False)
