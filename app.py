@@ -171,7 +171,7 @@ meter_html = """
 
   <div id="app-container">
     <div id="labels">
-      <div class="label red"><span class="tick"></span>130</div>
+      <div class="label red">130<span class="tick"></span></div>
       <div class="label red"><span class="tick"></span>120</div>
       <div class="label red"><span class="tick"></span>110</div>
       <div class="label yellow"><span class="tick"></span>100</div>
