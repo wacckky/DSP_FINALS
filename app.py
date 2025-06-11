@@ -156,7 +156,7 @@ meter_html = """
     background: #059669;
   }
 
-  #reset-button {
+  #reset-button, #pause-button {
     margin-top: 10px;
     font-size: 0.8rem;
     padding: 4px 12px;
@@ -196,6 +196,7 @@ meter_html = """
       <div id="max-db">Max: 0 dB</div>
       <div id="db-value">dB: 0</div>
       <button id="reset-button">Reset</button>
+      <button id="pause-button">Pause</button>
     </div>
 
     <div class="overlay" id="overlay">
@@ -210,6 +211,7 @@ let dbHistory = [];
 const smoothingFactor = 0.3;
 const maxHistoryLength = 50;
 let intervalId = null;
+let isPaused = false;
 
 function startApp() {
   document.getElementById("overlay").style.display = "none";
@@ -223,6 +225,7 @@ function initMic() {
   const avgDbText = document.getElementById("avg-db");
   const maxDbText = document.getElementById("max-db");
   const resetButton = document.getElementById("reset-button");
+  const pauseButton = document.getElementById("pause-button");
 
   let maxDb = 0;
 
@@ -235,6 +238,17 @@ function initMic() {
     dbValue.textContent = "dB: 0";
     avgDbText.textContent = "Avg: 0 dB";
     maxDbText.textContent = "Max: 0 dB";
+  };
+
+  pauseButton.onclick = () => {
+    if (isPaused) {
+      intervalId = setInterval(updateMeter, 100);
+      pauseButton.textContent = "Pause";
+    } else {
+      clearInterval(intervalId);
+      pauseButton.textContent = "Resume";
+    }
+    isPaused = !isPaused;
   };
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -260,10 +274,9 @@ function initMic() {
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
 
-        // Adjusted dB calculation
-        const reference = 0.05; // typical quiet room level
+        const reference = 0.05;
         let db = 20 * Math.log10(rms / reference + 1e-6);
-        let positiveDb = Math.max(0, Math.min(130, db + 70)); // clamp to 0–130 dB
+        let positiveDb = Math.max(0, Math.min(130, db + 70));
 
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
@@ -283,7 +296,6 @@ function initMic() {
         maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
       }
 
-      updateMeter();
       intervalId = setInterval(updateMeter, 100);
 
       window.addEventListener('beforeunload', () => {
