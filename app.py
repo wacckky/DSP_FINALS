@@ -27,8 +27,6 @@ meter_html = """
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Live Mic dB Meter</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
 
@@ -36,9 +34,21 @@ meter_html = """
     margin: 0; padding: 0;
     background: transparent;
     font-family: 'Poppins', sans-serif;
-    height: 100%;
-    user-select: none;
     color: white;
+    user-select: none;
+  }
+
+  #dsp-tag {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    background: linear-gradient(to right, #06b6d4, #3b82f6);
+    padding: 4px 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 100;
   }
 
   #app-container {
@@ -46,10 +56,8 @@ meter_html = """
     justify-content: center;
     align-items: center;
     height: 280px;
-    gap: 24px;
     max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
+    margin: 50px auto 0;
     position: relative;
   }
 
@@ -61,7 +69,6 @@ meter_html = """
     width: 40px;
     font-size: 0.875rem;
     font-weight: 500;
-    user-select: none;
   }
 
   .label {
@@ -75,24 +82,25 @@ meter_html = """
 
   #meter-wrapper {
     position: relative;
-    width: 40px;
+    width: 50px;
     height: 250px;
-    border-radius: 12px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.08);
-    border: 1.5px solid #e5e7eb;
-    background: #f9fafb;
+    border-radius: 14px;
+    background: #1f2937;
+    border: 2px solid #374151;
     overflow: hidden;
+    margin: 0 20px;
     display: flex;
     align-items: flex-end;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
   }
 
   #bar {
     width: 100%;
     height: 0%;
-    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
-    border-radius: 12px 12px 0 0;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(to top, #ef4444, #facc15, #10b981);
+    box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
     transition: height 0.2s ease-out;
-    box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
   }
 
   #db-stats {
@@ -100,12 +108,11 @@ meter_html = """
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    margin-left: 16px;
   }
 
   #avg-db, #max-db {
     font-size: 0.9rem;
-    color: #6b7280;
+    color: #9ca3af;
   }
 
   #db-value {
@@ -129,7 +136,7 @@ meter_html = """
     height: 100%;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    background: transparent;
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -159,10 +166,13 @@ meter_html = """
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    color: black;
   }
 </style>
 </head>
 <body>
+  <div id="dsp-tag">DSP</div>
+
   <div id="app-container">
     <div id="labels">
       <div class="label red">0</div>
@@ -177,15 +187,18 @@ meter_html = """
       <div class="label green">-90</div>
       <div class="label green">-100</div>
     </div>
+
     <div id="meter-wrapper">
       <div id="bar"></div>
     </div>
+
     <div id="db-stats">
       <div id="avg-db">Avg: 0 dB</div>
       <div id="max-db">Max: 0 dB</div>
       <div id="db-value">dB: 0</div>
       <button id="reset-button">Reset</button>
     </div>
+
     <div class="overlay" id="overlay">
       <button onclick="startApp()">Start</button>
     </div>
@@ -218,9 +231,7 @@ function initMic() {
     dbHistory = [];
     lastDb = -100;
     maxDb = -100;
-
-    // Add a transition for smooth reset
-    bar.style.transition = "height 0.2s ease-in-out";
+    bar.style.transition = "height 0.3s ease-in-out";
     bar.style.height = "0%";
     dbValue.textContent = "dB: 0";
     avgDbText.textContent = "Avg: 0 dB";
@@ -263,8 +274,7 @@ function initMic() {
 
         const percentage = ((smoothedDb + 100) / 100) * 100;
 
-        // Reset transition after initial reset animation
-        bar.style.transition = "";
+        bar.style.transition = "height 0.15s ease-out";
         bar.style.height = percentage + "%";
         dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
         avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
@@ -290,4 +300,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=420, scrolling=False)
+html(meter_html, height=480, scrolling=False)
