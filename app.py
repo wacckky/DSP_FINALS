@@ -1,4 +1,44 @@
-meter_html = rf"""
+import streamlit as st
+from streamlit.components.v1 import html
+
+st.set_page_config(page_title="Mic dB Level", layout="wide")  # Use wide layout
+
+# Initialize session state for smoothing factor if it doesn't exist
+if 'smoothing_factor' not in st.session_state:
+    st.session_state['smoothing_factor'] = 0.3
+
+# Initialize session state for javascript_initialized
+if 'javascript_initialized' not in st.session_state:
+    st.session_state['javascript_initialized'] = False
+
+# Inject CSS to set background color and title style
+st.markdown(
+    """
+    <style>
+    /* Target the main Streamlit app area */
+    .stApp {
+        background-color: black !important;
+        color: white !important;
+    }
+    /* Target the title specifically */
+    .streamlit-title {
+        font-size: 3em !important; /* Use !important to ensure override */
+        font-weight: bold !important;
+        color: white !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Use markdown for the title
+st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
+
+# Create columns for the sound meter and the slider
+col1, col2 = st.columns([3, 1])  # Adjust column widths as needed
+
+with col1:
+    meter_html = rf"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -172,7 +212,7 @@ meter_html = rf"""
     let lastDb = -100;
     let dbHistory = [];
     // Get the smoothing factor from Streamlit session state
-    const smoothingFactor = parseFloat('{st.session_state.smoothing_factor}');
+    const smoothingFactor = {st.session_state.smoothing_factor};
     const maxHistoryLength = 50;
     let intervalId = null;
 
