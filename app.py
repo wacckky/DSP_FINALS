@@ -43,38 +43,24 @@ meter_html = """
     justify-content: center;
     align-items: center;
     height: 280px;
-    max-width: 480px;
+    max-width: 400px;
     margin: 50px auto 0;
     position: relative;
   }
 
   #labels {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     justify-content: space-between;
     height: 250px;
-    width: 50px;
-    font-size: 0.75rem;
+    width: 40px;
+    font-size: 0.875rem;
     font-weight: 500;
-    margin-right: 10px;
-    position: relative;
   }
 
   .label {
     text-align: right;
-    padding-right: 5px;
-    position: relative;
-  }
-
-  .label::after {
-    content: "";
-    position: absolute;
-    right: -5px;
-    top: 50%;
-    width: 6px;
-    height: 2px;
-    background-color: white;
-    transform: translateY(-50%);
+    color: white;
   }
 
   .red { color: #ef4444; }
@@ -186,8 +172,6 @@ meter_html = """
       <div class="label green">50</div>
       <div class="label green">40</div>
       <div class="label green">30</div>
-      <div class="label green">20</div>
-      <div class="label green">10</div>
     </div>
 
     <div id="meter-wrapper">
@@ -263,9 +247,10 @@ function initMic() {
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.max(10, Math.min(db + 100, 130)); // Normalize to 10–130 dB range
+        db = Math.max(-130, db);  // allow down to -130 dB
+        let positiveDb = 130 + db; // shift to positive
 
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * db;
+        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
 
         dbHistory.push(smoothedDb);
@@ -274,7 +259,7 @@ function initMic() {
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
 
-        const percentage = ((smoothedDb - 10) / 120) * 100;
+        const percentage = Math.min(100, (smoothedDb / 130) * 100);
 
         bar.style.transition = "height 0.15s ease-out";
         bar.style.height = percentage + "%";
@@ -302,4 +287,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=500, scrolling=False)
+html(meter_html, height=480, scrolling=False)
