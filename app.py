@@ -11,8 +11,9 @@ st.markdown(
         color: white !important;
     }
     .streamlit-title {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+        font-weight: 700 !important;
         font-size: 3em !important;
-        font-weight: bold !important;
         color: white !important;
     }
     </style>
