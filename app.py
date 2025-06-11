@@ -1,8 +1,11 @@
+<!-- Streamlit App - Positive dB Meter (10 to 130 dB) -->
+
 import streamlit as st
 from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
 
+# Inject CSS to set background color and title style
 st.markdown(
     """
     <style>
@@ -27,6 +30,8 @@ meter_html = """
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Live Mic dB Meter</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
 
@@ -34,8 +39,9 @@ meter_html = """
     margin: 0; padding: 0;
     background: transparent;
     font-family: 'Poppins', sans-serif;
-    color: white;
+    height: 100%;
     user-select: none;
+    color: white;
   }
 
   #app-container {
@@ -43,8 +49,10 @@ meter_html = """
     justify-content: center;
     align-items: center;
     height: 280px;
+    gap: 24px;
     max-width: 400px;
-    margin: 50px auto 0;
+    margin: 0 auto;
+    padding: 20px;
     position: relative;
   }
 
@@ -69,25 +77,24 @@ meter_html = """
 
   #meter-wrapper {
     position: relative;
-    width: 50px;
+    width: 40px;
     height: 250px;
-    border-radius: 14px;
-    background: #1f2937;
-    border: 2px solid #374151;
+    border-radius: 12px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.08);
+    border: 1.5px solid #e5e7eb;
+    background: #f9fafb;
     overflow: hidden;
-    margin: 0 20px;
     display: flex;
     align-items: flex-end;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
   }
 
   #bar {
     width: 100%;
     height: 0%;
-    border-radius: 14px 14px 0 0;
-    background: linear-gradient(to top, #ef4444, #facc15, #10b981);
-    box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
+    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
+    border-radius: 12px 12px 0 0;
     transition: height 0.2s ease-out;
+    box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
   }
 
   #db-stats {
@@ -95,11 +102,12 @@ meter_html = """
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
+    margin-left: 16px;
   }
 
   #avg-db, #max-db {
     font-size: 0.9rem;
-    color: #9ca3af;
+    color: #6b7280;
   }
 
   #db-value {
@@ -122,8 +130,7 @@ meter_html = """
     width: 100%;
     height: 100%;
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    background: rgba(0, 0, 0, 0.4);
+    background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -153,38 +160,33 @@ meter_html = """
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    color: black;
   }
 </style>
 </head>
 <body>
-
   <div id="app-container">
     <div id="labels">
-      <div class="label red">0</div>
-      <div class="label red">-10</div>
-      <div class="label red">-20</div>
-      <div class="label red">-30</div>
-      <div class="label yellow">-40</div>
-      <div class="label yellow">-50</div>
-      <div class="label yellow">-60</div>
-      <div class="label green">-70</div>
-      <div class="label green">-80</div>
-      <div class="label green">-90</div>
-      <div class="label green">-100</div>
+      <div class="label red">130</div>
+      <div class="label red">120</div>
+      <div class="label red">110</div>
+      <div class="label yellow">100</div>
+      <div class="label yellow">90</div>
+      <div class="label yellow">80</div>
+      <div class="label green">70</div>
+      <div class="label green">50</div>
+      <div class="label green">30</div>
+      <div class="label green">20</div>
+      <div class="label green">10</div>
     </div>
-
     <div id="meter-wrapper">
       <div id="bar"></div>
     </div>
-
     <div id="db-stats">
       <div id="avg-db">Avg: 0 dB</div>
       <div id="max-db">Max: 0 dB</div>
       <div id="db-value">dB: 0</div>
       <button id="reset-button">Reset</button>
     </div>
-
     <div class="overlay" id="overlay">
       <button onclick="startApp()">Start</button>
     </div>
@@ -215,11 +217,7 @@ function initMic() {
 
   resetButton.onclick = () => {
     dbHistory = [];
-    lastDb = -100;
     maxDb = -100;
-    bar.style.transition = "height 0.3s ease-in-out";
-    bar.style.height = "0%";
-    dbValue.textContent = "dB: 0";
     avgDbText.textContent = "Avg: 0 dB";
     maxDbText.textContent = "Max: 0 dB";
   };
@@ -258,13 +256,16 @@ function initMic() {
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
 
-        const percentage = ((smoothedDb + 100) / 100) * 100;
+        const positiveDb = smoothedDb + 130;
+        const avgPositiveDb = avgDb + 130;
+        const maxPositiveDb = maxDb + 130;
 
-        bar.style.transition = "height 0.15s ease-out";
+        const percentage = ((positiveDb - 10) / 120) * 100; // scale from 10 to 130
+
         bar.style.height = percentage + "%";
-        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
-        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
-        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
+        dbValue.textContent = `dB: ${Math.round(positiveDb)}`;
+        avgDbText.textContent = `Avg: ${Math.round(avgPositiveDb)} dB`;
+        maxDbText.textContent = `Max: ${Math.round(maxPositiveDb)} dB`;
       }
 
       updateMeter();
@@ -286,4 +287,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=480, scrolling=False)
+html(meter_html, height=420, scrolling=False)
