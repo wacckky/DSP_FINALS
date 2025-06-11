@@ -1,25 +1,29 @@
 import streamlit as st
 from streamlit.components.v1 import html
 
-
 st.set_page_config(page_title="Mic dB Level", layout="centered")
+
+# Inject CSS to set background color and title style
 st.markdown(
     """
     <style>
-    body {
-        background-color: black;
-        color: white;
+    /* Target the main Streamlit app area */
+    .stApp {
+        background-color: black !important;
+        color: white !important;
     }
+    /* Target the title specifically */
     .streamlit-title {
-        font-size: 3em;
-        font-weight: bold;
-        color: white;
+        font-size: 3em !important; /* Use !important to ensure override */
+        font-weight: bold !important;
+        color: white !important;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+# Use markdown for the title
 st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
 meter_html = """
@@ -34,7 +38,7 @@ meter_html = """
 
   html, body {
     margin: 0; padding: 0;
-    background: transparent;
+    background: transparent; /* Important:  Let Streamlit's background show through */
     font-family: 'Poppins', sans-serif;
     height: 100%;
     user-select: none;
@@ -278,8 +282,6 @@ function initMic() {
     });
 }
 </script>
-
-
 </body>
 </html>
 """
