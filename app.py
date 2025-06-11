@@ -31,11 +31,13 @@ meter_html = """
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
   html, body {
-    margin: 0; padding: 0;
-    background: transparent;
-    font-family: 'Poppins', sans-serif;
-    color: white;
-    user-select: none;
+  margin: 0; padding: 0;
+  background: url('https://raw.githubusercontent.com/wacckky/DSP_FINALS/main/DSP(1).jpg') no-repeat center center fixed;
+  background-size: cover;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  user-select: none;
+}
   }
   #app-container {
     display: flex;
