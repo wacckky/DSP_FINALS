@@ -168,13 +168,6 @@ meter_html = """
     </div>
     <div id="meter-wrapper">
       <div id="bar"></div>
-      <script>
-        for (let db = 10; db <= 130; db += 10) {
-          const pos = ((db - 10) / 120) * 250;
-          document.write(`<div class='tick-line' style='bottom:${pos}px;'></div>`);
-          document.write(`<div class='tick-label' style='bottom:${pos}px;'>${db}</div>`);
-        }
-      </script>
     </div>
     <div id="db-stats">
       <div id="avg-db">Avg: 0 dB</div>
