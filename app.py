@@ -1,44 +1,4 @@
-import streamlit as st
-from streamlit.components.v1 import html
-
-st.set_page_config(page_title="Mic dB Level", layout="wide")  # Use wide layout
-
-# Initialize session state for smoothing factor if it doesn't exist
-if 'smoothing_factor' not in st.session_state:
-    st.session_state['smoothing_factor'] = 0.3
-
-# Initialize session state for javascript_initialized
-if 'javascript_initialized' not in st.session_state:
-    st.session_state['javascript_initialized'] = False
-
-# Inject CSS to set background color and title style
-st.markdown(
-    """
-    <style>
-    /* Target the main Streamlit app area */
-    .stApp {
-        background-color: black !important;
-        color: white !important;
-    }
-    /* Target the title specifically */
-    .streamlit-title {
-        font-size: 3em !important; /* Use !important to ensure override */
-        font-weight: bold !important;
-        color: white !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Use markdown for the title
-st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
-
-# Create columns for the sound meter and the slider
-col1, col2 = st.columns([3, 1])  # Adjust column widths as needed
-
-with col1:
-    meter_html = rf"""
+meter_html = rf"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -219,10 +179,10 @@ with col1:
     function startApp() {{
       document.getElementById("overlay").style.display = "none";
       // Only initialize the mic if it hasn't been initialized before
-      if (!window.javascriptInitialized) {
+      if (!window.javascriptInitialized) {{
         initMic();
         window.javascriptInitialized = true; // Set the flag
-      }
+      }}
     }}
 
     function initMic() {{
@@ -300,38 +260,15 @@ with col1:
     }}
 
     // Check if javascriptInitialized is already true
-    if ('{st.session_state.javascript_initialized}' == 'False') {
+    if ('{st.session_state.javascript_initialized}' == 'False') {{
         window.javascriptInitialized = false;
         // Set javascript_initialized to True in session state
         Streamlit.setComponentValue(true)
-    } else {
+    }} else {{
         window.javascriptInitialized = true;
-    }
+    }}
 
     </script>
     </body>
     </html>
     """
-    html(meter_html, height=420, scrolling=False)
-
-with col2:
-    # Create a slider for the smoothing factor
-    smoothing_factor = st.slider(
-        "Smoothing",
-        min_value=0.0,
-        max_value=0.99,
-        value=st.session_state['smoothing_factor'],
-        step=0.01,
-        key="smoothing_slider",  # Add a key for the slider
-        help="Adjust the smoothing of the dB readings.  Lower values are more responsive, higher values are smoother."
-    )
-
-    # Update session state with the slider value
-    st.session_state['smoothing_factor'] = smoothing_factor
-
-    # Callback function to update javascript_initialized in session state
-    def update_js_initialized():
-        st.session_state['javascript_initialized'] = True
-
-# The following line is not needed anymore
-# st.session_state['javascript_initialized'] = smoothing_factor
