@@ -63,9 +63,10 @@ meter_html = """
   }
 
   #meter-wrapper {
+    position: relative;
     width: 40px;
     height: 250px;
-    background: #111;
+    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
     border: 1px solid #444;
     border-radius: 12px;
     overflow: hidden;
@@ -76,9 +77,26 @@ meter_html = """
   #bar {
     width: 100%;
     height: 0%;
-    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
+    background: rgba(0,0,0,0.4);
     border-radius: 12px 12px 0 0;
     transition: height 0.15s ease-out;
+  }
+
+  .tick-line {
+    position: absolute;
+    left: 100%;
+    width: 10px;
+    height: 1px;
+    background: white;
+    opacity: 0.3;
+  }
+
+  .tick-label {
+    position: absolute;
+    left: 120%;
+    font-size: 0.7rem;
+    color: white;
+    opacity: 0.6;
   }
 
   #db-stats {
@@ -150,6 +168,14 @@ meter_html = """
     </div>
     <div id="meter-wrapper">
       <div id="bar"></div>
+      <!-- Tick lines on the right side -->
+      <script>
+        for (let db = 10; db <= 130; db += 10) {
+          const pos = ((db - 10) / 120) * 250;
+          document.write(`<div class='tick-line' style='bottom:${pos}px;'></div>`);
+          document.write(`<div class='tick-label' style='bottom:${pos}px;'>${db}</div>`);
+        }
+      </script>
     </div>
     <div id="db-stats">
       <div id="avg-db">Avg: 0 dB</div>
@@ -207,10 +233,9 @@ function initMic() {
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
-        let db = 20 * Math.log10(rms + 1e-6); // raw dB (negative)
-        let positiveDb = Math.round((db + 100) * 1.2 + 10); // scaled to 10–130 dB
+        let db = 20 * Math.log10(rms + 1e-6);
+        let positiveDb = Math.round((db + 100) * 1.2 + 10);
 
-        // Smooth the reading
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
 
@@ -240,4 +265,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=420, scrolling=False)
+html(meter_html, height=460, scrolling=False)
