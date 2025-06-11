@@ -70,7 +70,7 @@ meter_html = """
     width: 10px;
     height: 2px;
     background-color: #9ca3af;
-    margin-right: -20px;
+    margin-right: -15px;
   }
 
   .red { color: #ef4444; }
