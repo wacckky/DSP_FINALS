@@ -40,7 +40,7 @@ meter_html = """
 
   #app-container {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     height: 550px;
     max-width: 400px;
