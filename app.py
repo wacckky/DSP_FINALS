@@ -1,11 +1,7 @@
 import streamlit as st
 from streamlit.components.v1 import html
-@st.cache_data
-def my_function():
-        return "Some data"
-if st.button("Clear Cache"):
-        st.cache_data.clear()
-        st.rerun()  # Force the app to rerun and fetch fresh data
+
+
 st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.markdown(
     """
@@ -282,8 +278,15 @@ function initMic() {
     });
 }
 </script>
+
+
 </body>
 </html>
 """
-
+@st.cache_data
+def my_function():
+        return "Some data"
+if st.button("Clear Cache"):
+        st.cache_data.clear()
+        st.rerun()  # Force the app to rerun and fetch fresh data
 html(meter_html, height=420, scrolling=False)
