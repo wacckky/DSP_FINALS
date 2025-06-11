@@ -3,7 +3,6 @@ from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
 
-# Inject CSS for styling
 st.markdown(
     """
     <style>
@@ -23,29 +22,30 @@ st.markdown(
 
 st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
-# Embed the custom HTML/CSS/JS dB meter
 meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <style>
-  body {
-    margin: 0;
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+  html, body {
+    margin: 0; padding: 0;
     background: transparent;
     font-family: 'Poppins', sans-serif;
     color: white;
+    user-select: none;
   }
 
   #app-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 300px;
-    gap: 24px;
-    max-width: 420px;
-    margin: 0 auto;
-    padding: 20px;
+    height: 280px;
+    max-width: 400px;
+    margin: 50px auto 0;
+    position: relative;
   }
 
   #labels {
@@ -53,8 +53,9 @@ meter_html = """
     flex-direction: column;
     justify-content: space-between;
     height: 250px;
-    width: 50px;
-    font-size: 0.85rem;
+    width: 40px;
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 
   .label {
@@ -62,59 +63,86 @@ meter_html = """
     color: white;
   }
 
+  .red { color: #ef4444; }
+  .yellow { color: #facc15; }
+  .green { color: #10b981; }
+
   #meter-wrapper {
     position: relative;
-    width: 40px;
+    width: 50px;
     height: 250px;
-    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
-    border: 1px solid #444;
-    border-radius: 12px;
+    border-radius: 14px;
+    background: #1f2937;
+    border: 2px solid #374151;
     overflow: hidden;
+    margin: 0 20px;
     display: flex;
     align-items: flex-end;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
   }
 
   #bar {
     width: 100%;
     height: 0%;
-    background: rgba(0,0,0,0.4);
-    border-radius: 12px 12px 0 0;
-    transition: height 0.15s ease-out;
-  }
-
-  .tick-line {
-    position: absolute;
-    left: 100%;
-    width: 10px;
-    height: 1px;
-    background: white;
-    opacity: 0.3;
-  }
-
-  .tick-label {
-    position: absolute;
-    left: 120%;
-    font-size: 0.7rem;
-    color: white;
-    opacity: 0.6;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(to top, #ef4444, #facc15, #10b981);
+    box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
+    transition: height 0.2s ease-out;
   }
 
   #db-stats {
     display: flex;
     flex-direction: column;
-    margin-left: 16px;
-    gap: 4px;
+    align-items: flex-start;
+    justify-content: center;
   }
 
   #avg-db, #max-db {
     font-size: 0.9rem;
-    color: #ccc;
+    color: #9ca3af;
   }
 
   #db-value {
+    font-weight: 700;
     font-size: 1.1rem;
-    font-weight: bold;
+    color: #ffffff;
+  }
+
+  #out-message {
+    color: #ef4444;
+    font-weight: 600;
+    margin-top: 15px;
+    text-align: center;
+  }
+
+  .overlay {
+    position: absolute;
+    z-index: 10;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .overlay button {
+    padding: 10px 24px;
+    font-size: 1.2rem;
+    background: #10b981;
     color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .overlay button:hover {
+    background: #059669;
   }
 
   #reset-button {
@@ -125,67 +153,50 @@ meter_html = """
     border: none;
     border-radius: 6px;
     cursor: pointer;
-  }
-
-  .overlay {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    backdrop-filter: blur(8px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .overlay button {
-    padding: 12px 24px;
-    font-size: 1.1rem;
-    background: #10b981;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    color: black;
   }
 </style>
 </head>
 <body>
+
   <div id="app-container">
     <div id="labels">
-      <div class="label">130</div>
-      <div class="label">120</div>
-      <div class="label">110</div>
-      <div class="label">100</div>
-      <div class="label">90</div>
-      <div class="label">80</div>
-      <div class="label">70</div>
-      <div class="label">60</div>
-      <div class="label">50</div>
-      <div class="label">40</div>
-      <div class="label">30</div>
-      <div class="label">20</div>
-      <div class="label">10</div>
+      <div class="label red">0</div>
+      <div class="label red">-10</div>
+      <div class="label red">-20</div>
+      <div class="label red">-30</div>
+      <div class="label yellow">-40</div>
+      <div class="label yellow">-50</div>
+      <div class="label yellow">-60</div>
+      <div class="label green">-70</div>
+      <div class="label green">-80</div>
+      <div class="label green">-90</div>
+      <div class="label green">-100</div>
     </div>
+
     <div id="meter-wrapper">
       <div id="bar"></div>
     </div>
+
     <div id="db-stats">
       <div id="avg-db">Avg: 0 dB</div>
       <div id="max-db">Max: 0 dB</div>
       <div id="db-value">dB: 0</div>
       <button id="reset-button">Reset</button>
     </div>
+
     <div class="overlay" id="overlay">
       <button onclick="startApp()">Start</button>
     </div>
   </div>
+  <div id="out-message"></div>
 
 <script>
+let lastDb = -100;
 let dbHistory = [];
-let maxDb = 0;
-let lastDb = 0;
 const smoothingFactor = 0.3;
 const maxHistoryLength = 50;
+let intervalId = null;
 
 function startApp() {
   document.getElementById("overlay").style.display = "none";
@@ -193,20 +204,30 @@ function startApp() {
 }
 
 function initMic() {
+  const outMessage = document.getElementById('out-message');
   const bar = document.getElementById("bar");
   const dbValue = document.getElementById("db-value");
   const avgDbText = document.getElementById("avg-db");
   const maxDbText = document.getElementById("max-db");
   const resetButton = document.getElementById("reset-button");
 
+  let maxDb = -100;
+
   resetButton.onclick = () => {
     dbHistory = [];
-    maxDb = 0;
+    lastDb = -100;
+    maxDb = -100;
+    bar.style.transition = "height 0.3s ease-in-out";
+    bar.style.height = "0%";
+    dbValue.textContent = "dB: 0";
     avgDbText.textContent = "Avg: 0 dB";
     maxDbText.textContent = "Max: 0 dB";
-    dbValue.textContent = "dB: 0";
-    bar.style.height = "0%";
   };
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    outMessage.textContent = "getUserMedia not supported by your browser.";
+    return;
+  }
 
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
@@ -226,9 +247,9 @@ function initMic() {
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
-        let positiveDb = Math.round((db + 100) * 1.2 + 10);
+        db = Math.min(0, Math.max(db, -100));
 
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
+        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * db;
         lastDb = smoothedDb;
 
         dbHistory.push(smoothedDb);
@@ -237,18 +258,27 @@ function initMic() {
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
 
-        const heightPercent = ((smoothedDb - 10) / 120) * 100;
-        bar.style.height = heightPercent + "%";
+        const percentage = ((smoothedDb + 100) / 100) * 100;
 
+        bar.style.transition = "height 0.15s ease-out";
+        bar.style.height = percentage + "%";
         dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
         avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
         maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
       }
 
-      setInterval(updateMeter, 100);
+      updateMeter();
+      intervalId = setInterval(updateMeter, 100);
+
+      window.addEventListener('beforeunload', () => {
+        clearInterval(intervalId);
+        if (audioCtx.state !== 'closed') audioCtx.close();
+      });
+
     })
     .catch(err => {
-      document.getElementById("overlay").innerHTML = `<div style='color:red; text-align:center;'>Microphone access denied.<br>Please allow microphone access and refresh.</div>`;
+      outMessage.textContent = "Microphone access denied.";
+      console.error(err);
     });
 }
 </script>
@@ -256,4 +286,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=460, scrolling=False)
+html(meter_html, height=480, scrolling=False)
