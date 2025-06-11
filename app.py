@@ -3,18 +3,15 @@ from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
 
-# Inject CSS to set background color and title style
 st.markdown(
     """
     <style>
-    /* Target the main Streamlit app area */
     .stApp {
         background-color: black !important;
         color: white !important;
     }
-    /* Target the title specifically */
     .streamlit-title {
-        font-size: 3em !important; /* Use !important to ensure override */
+        font-size: 3em !important;
         font-weight: bold !important;
         color: white !important;
     }
@@ -23,7 +20,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Use markdown for the title
 st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
 meter_html = """
@@ -38,11 +34,11 @@ meter_html = """
 
   html, body {
     margin: 0; padding: 0;
-    background: transparent; /* Important:  Let Streamlit's background show through */
+    background: transparent;
     font-family: 'Poppins', sans-serif;
     height: 100%;
     user-select: none;
-    color: white; /* Added to make text visible on black background */
+    color: white;
   }
 
   #app-container {
@@ -70,7 +66,7 @@ meter_html = """
 
   .label {
     text-align: right;
-    color: white; /* Added to make labels visible */
+    color: white;
   }
 
   .red { color: #ef4444; }
@@ -219,23 +215,17 @@ function initMic() {
   let maxDb = -100;
 
   resetButton.onclick = () => {
-  clearInterval(intervalId); // Stop updates temporarily
+    dbHistory = [];
+    lastDb = -100;
+    maxDb = -100;
 
-  // Reset visuals to 0
-  dbHistory = [];
-  maxDb = -100;
-  lastDb = -100;
-  bar.style.height = "0%";
-  dbValue.textContent = "dB: 0";
-  avgDbText.textContent = "Avg: 0 dB";
-  maxDbText.textContent = "Max: 0 dB";
-
-  // Brief pause before restarting meter
-  setTimeout(() => {
-    intervalId = setInterval(updateMeter, 100);
-  }, 500); // 0.5 second pause
-};
-
+    // Add a transition for smooth reset
+    bar.style.transition = "height 0.2s ease-in-out";
+    bar.style.height = "0%";
+    dbValue.textContent = "dB: 0";
+    avgDbText.textContent = "Avg: 0 dB";
+    maxDbText.textContent = "Max: 0 dB";
+  };
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     outMessage.textContent = "getUserMedia not supported by your browser.";
@@ -273,6 +263,8 @@ function initMic() {
 
         const percentage = ((smoothedDb + 100) / 100) * 100;
 
+        // Reset transition after initial reset animation
+        bar.style.transition = "";
         bar.style.height = percentage + "%";
         dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
         avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
