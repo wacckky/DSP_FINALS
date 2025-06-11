@@ -161,17 +161,17 @@ meter_html = """
 
   <div id="app-container">
     <div id="labels">
-      <div class="label red">0</div>
-      <div class="label red">-10</div>
-      <div class="label red">-20</div>
-      <div class="label red">-30</div>
-      <div class="label yellow">-40</div>
-      <div class="label yellow">-50</div>
-      <div class="label yellow">-60</div>
-      <div class="label green">-70</div>
-      <div class="label green">-80</div>
-      <div class="label green">-90</div>
-      <div class="label green">-100</div>
+      <div class="label red">130</div>
+      <div class="label red">120</div>
+      <div class="label red">110</div>
+      <div class="label yellow">100</div>
+      <div class="label yellow">90</div>
+      <div class="label yellow">80</div>
+      <div class="label green">70</div>
+      <div class="label green">60</div>
+      <div class="label green">50</div>
+      <div class="label green">40</div>
+      <div class="label green">30</div>
     </div>
 
     <div id="meter-wrapper">
@@ -192,7 +192,7 @@ meter_html = """
   <div id="out-message"></div>
 
 <script>
-let lastDb = -100;
+let lastDb = 0;
 let dbHistory = [];
 const smoothingFactor = 0.3;
 const maxHistoryLength = 50;
@@ -211,12 +211,12 @@ function initMic() {
   const maxDbText = document.getElementById("max-db");
   const resetButton = document.getElementById("reset-button");
 
-  let maxDb = -100;
+  let maxDb = 0;
 
   resetButton.onclick = () => {
     dbHistory = [];
-    lastDb = -100;
-    maxDb = -100;
+    lastDb = 0;
+    maxDb = 0;
     bar.style.transition = "height 0.3s ease-in-out";
     bar.style.height = "0%";
     dbValue.textContent = "dB: 0";
@@ -247,9 +247,10 @@ function initMic() {
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.min(0, Math.max(db, -100));
+        db = Math.max(-130, db);  // allow down to -130 dB
+        let positiveDb = 130 + db; // shift to positive
 
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * db;
+        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
 
         dbHistory.push(smoothedDb);
@@ -258,7 +259,7 @@ function initMic() {
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
 
-        const percentage = ((smoothedDb + 100) / 100) * 100;
+        const percentage = Math.min(100, (smoothedDb / 130) * 100);
 
         bar.style.transition = "height 0.15s ease-out";
         bar.style.height = percentage + "%";
