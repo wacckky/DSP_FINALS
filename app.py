@@ -2,7 +2,24 @@ import streamlit as st
 from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Mic dB Level", layout="centered")
-st.title(" Sound Level Meter")
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: black;
+        color: white;
+    }
+    .streamlit-title {
+        font-size: 3em;
+        font-weight: bold;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
 meter_html = """
 <!DOCTYPE html>
@@ -20,6 +37,7 @@ meter_html = """
     font-family: 'Poppins', sans-serif;
     height: 100%;
     user-select: none;
+    color: white; /* Added to make text visible on black background */
   }
 
   #app-container {
@@ -47,6 +65,7 @@ meter_html = """
 
   .label {
     text-align: right;
+    color: white; /* Added to make labels visible */
   }
 
   .red { color: #ef4444; }
