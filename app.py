@@ -95,7 +95,7 @@ meter_html = """
     width: 100%;
     height: 0%;
     border-radius: 14px 14px 0 0;
-    background: linear-gradient(to top, #ef4444, #facc15, #10b981);
+    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
     box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
     transition: height 0.2s ease-out;
   }
