@@ -21,7 +21,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="streamlit-title">SOUND LEVEL METER</h1>', unsafe_allow_html=True)
 
 meter_html = """
 <!DOCTYPE html>
