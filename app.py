@@ -3,30 +3,21 @@ from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Sound Level Meter", layout="centered")
 
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: black;
-        color: white;
-    }
-    .streamlit-title {
-        font-size: 3em;
-        font-weight: bold;
-        color: white;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
+st.markdown('<h1 style="color:white;">Sound Level Meter</h1>', unsafe_allow_html=True)
 
 html_code = """
 <style>
+body {
+    background-color: black;
+    color: white;
+}
+
 #app-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 550px;
-    max-width: 600px;
+    max-width: 650px;
     margin: 40px auto 0;
     font-family: 'Poppins', sans-serif;
 }
@@ -43,15 +34,20 @@ html_code = """
     text-align: right;
 }
 
-#ticks {
+#tick-lines {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 500px;
-    width: 10px;
-    margin-right: 10px;
-    color: #9ca3af;
-    font-size: 14px;
+    width: 20px;
+    margin-right: 4px;
+}
+
+.tick-line {
+    height: 1px;
+    width: 20px;
+    background-color: #9ca3af;
+    align-self: flex-end;
 }
 
 #meter-wrapper {
@@ -82,9 +78,6 @@ html_code = """
     align-items: flex-start;
     justify-content: center;
     margin-left: 20px;
-}
-
-#avg-db, #max-db {
     font-size: 0.9rem;
     color: #9ca3af;
 }
@@ -156,20 +149,20 @@ html_code = """
     <div class="label green">10</div>
   </div>
 
-  <div id="ticks">
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
-    <div class="tick">▌</div>
+  <div id="tick-lines">
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
+    <div class="tick-line"></div>
   </div>
 
   <div id="meter-wrapper">
@@ -279,4 +272,4 @@ function initMic() {
 </script>
 """
 
-html(html_code, height=620, scrolling=False)
+html(html_code, height=650, scrolling=False)
