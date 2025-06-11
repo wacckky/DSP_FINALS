@@ -283,10 +283,5 @@ function initMic() {
 </body>
 </html>
 """
-@st.cache_data
-def my_function():
-        return "Some data"
-if st.button("Clear Cache"):
-        st.cache_data.clear()
-        st.rerun()  # Force the app to rerun and fetch fresh data
+
 html(meter_html, height=420, scrolling=False)
