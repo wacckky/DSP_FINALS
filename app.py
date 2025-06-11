@@ -42,7 +42,7 @@ meter_html = """
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 280px;
+    height: 550px;
     max-width: 400px;
     margin: 50px auto 0;
     position: relative;
@@ -52,15 +52,25 @@ meter_html = """
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 250px;
-    width: 40px;
+    height: 500px;
+    width: 60px;
     font-size: 0.875rem;
     font-weight: 500;
   }
 
   .label {
-    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
     color: white;
+  }
+
+  .tick {
+    width: 10px;
+    height: 2px;
+    background-color: #9ca3af;
+    margin-right: 4px;
   }
 
   .red { color: #ef4444; }
@@ -70,7 +80,7 @@ meter_html = """
   #meter-wrapper {
     position: relative;
     width: 50px;
-    height: 250px;
+    height: 500px;
     border-radius: 14px;
     background: #1f2937;
     border: 2px solid #374151;
@@ -161,17 +171,19 @@ meter_html = """
 
   <div id="app-container">
     <div id="labels">
-      <div class="label red">130</div>
-      <div class="label red">120</div>
-      <div class="label red">110</div>
-      <div class="label yellow">100</div>
-      <div class="label yellow">90</div>
-      <div class="label yellow">80</div>
-      <div class="label green">70</div>
-      <div class="label green">60</div>
-      <div class="label green">50</div>
-      <div class="label green">40</div>
-      <div class="label green">30</div>
+      <div class="label red"><span class="tick"></span>130</div>
+      <div class="label red"><span class="tick"></span>120</div>
+      <div class="label red"><span class="tick"></span>110</div>
+      <div class="label yellow"><span class="tick"></span>100</div>
+      <div class="label yellow"><span class="tick"></span>90</div>
+      <div class="label yellow"><span class="tick"></span>80</div>
+      <div class="label green"><span class="tick"></span>70</div>
+      <div class="label green"><span class="tick"></span>60</div>
+      <div class="label green"><span class="tick"></span>50</div>
+      <div class="label green"><span class="tick"></span>40</div>
+      <div class="label green"><span class="tick"></span>30</div>
+      <div class="label green"><span class="tick"></span>20</div>
+      <div class="label green"><span class="tick"></span>10</div>
     </div>
 
     <div id="meter-wrapper">
@@ -247,8 +259,8 @@ function initMic() {
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.max(-130, db);  // allow down to -130 dB
-        let positiveDb = 130 + db; // shift to positive
+        db = Math.max(-130, db);
+        let positiveDb = 130 + db;
 
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
@@ -287,4 +299,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=480, scrolling=False)
+html(meter_html, height=600, scrolling=False)
