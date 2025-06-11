@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit.components.v1 import html
 
-st.set_page_config(page_title="Mic dB Level", layout="centered")
+st.set_page_config(page_title="Sound Level Meter", layout="centered")
 
 st.markdown(
     """
@@ -29,7 +29,6 @@ meter_html = """
 <meta charset="UTF-8" />
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
-
   html, body {
     margin: 0; padding: 0;
     background: transparent;
@@ -37,13 +36,12 @@ meter_html = """
     color: white;
     user-select: none;
   }
-
   #app-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 550px;
-    max-width: 400px;
+    max-width: 500px;
     margin: 50px auto 0;
     position: relative;
   }
@@ -53,24 +51,14 @@ meter_html = """
     flex-direction: column;
     justify-content: space-between;
     height: 500px;
-    width: 60px;
+    width: 40px;
     font-size: 0.875rem;
     font-weight: 500;
   }
 
   .label {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
     color: white;
-  }
-
-  .tick {
-    width: 10px;
-    height: 2px;
-    background-color: #9ca3af;
-    margin-left: 4px;
+    text-align: right;
   }
 
   .red { color: #ef4444; }
@@ -85,7 +73,7 @@ meter_html = """
     background: #1f2937;
     border: 2px solid #374151;
     overflow: hidden;
-    margin: 0 20px;
+    margin: 0 10px;
     display: flex;
     align-items: flex-end;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
@@ -100,11 +88,26 @@ meter_html = """
     transition: height 0.2s ease-out;
   }
 
+  #ticks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 500px;
+    width: 10px;
+  }
+
+  .tick {
+    width: 10px;
+    height: 2px;
+    background-color: #9ca3af;
+  }
+
   #db-stats {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
+    margin-left: 20px;
   }
 
   #avg-db, #max-db {
@@ -169,39 +172,55 @@ meter_html = """
 </head>
 <body>
 
-  <div id="app-container">
-    <div id="labels">
-      <div class="label red">130<span class="tick"></span></div>
-      <div class="label red">120<span class="tick"></span></div>
-      <div class="label red">110<span class="tick"></span></div>
-      <div class="label yellow">100<span class="tick"></span></div>
-      <div class="label yellow">90<span class="tick"></span></div>
-      <div class="label yellow">80<span class="tick"></span></div>
-      <div class="label green">70<span class="tick"></span></div>
-      <div class="label green">60<span class="tick"></span></div>
-      <div class="label green">50<span class="tick"></span></div>
-      <div class="label green">40<span class="tick"></span></div>
-      <div class="label green">30<span class="tick"></span></div>
-      <div class="label green">20<span class="tick"></span></div>
-      <div class="label green">10<span class="tick"></span></div>
-    </div>
-
-    <div id="meter-wrapper">
-      <div id="bar"></div>
-    </div>
-
-    <div id="db-stats">
-      <div id="avg-db">Avg: 0 dB</div>
-      <div id="max-db">Max: 0 dB</div>
-      <div id="db-value">dB: 0</div>
-      <button id="reset-button">Reset</button>
-    </div>
-
-    <div class="overlay" id="overlay">
-      <button onclick="startApp()">Start</button>
-    </div>
+<div id="app-container">
+  <div id="labels">
+    <div class="label red">130</div>
+    <div class="label red">120</div>
+    <div class="label red">110</div>
+    <div class="label yellow">100</div>
+    <div class="label yellow">90</div>
+    <div class="label yellow">80</div>
+    <div class="label green">70</div>
+    <div class="label green">60</div>
+    <div class="label green">50</div>
+    <div class="label green">40</div>
+    <div class="label green">30</div>
+    <div class="label green">20</div>
+    <div class="label green">10</div>
   </div>
-  <div id="out-message"></div>
+
+  <div id="meter-wrapper">
+    <div id="bar"></div>
+  </div>
+
+  <div id="ticks">
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+    <div class="tick"></div>
+  </div>
+
+  <div id="db-stats">
+    <div id="avg-db">Avg: 0 dB</div>
+    <div id="max-db">Max: 0 dB</div>
+    <div id="db-value">dB: 0</div>
+    <button id="reset-button">Reset</button>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <button onclick="startApp()">Start</button>
+  </div>
+</div>
+<div id="out-message"></div>
 
 <script>
 let lastDb = 0;
@@ -258,13 +277,9 @@ function initMic() {
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
-        
-        // Tone down exaggeration here by adjusting scale
         let db = 20 * Math.log10(rms + 1e-6);
         db = Math.max(-130, db);
         let positiveDb = 130 + db;
-
-        // Apply smoothing
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb * 0.85;
         lastDb = smoothedDb;
 
@@ -273,7 +288,6 @@ function initMic() {
 
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
-
         const percentage = Math.min(100, (smoothedDb / 130) * 100);
 
         bar.style.transition = "height 0.15s ease-out";
@@ -302,4 +316,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=600, scrolling=False)
+html(meter_html, height=620, scrolling=False)
