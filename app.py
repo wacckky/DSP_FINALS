@@ -38,19 +38,6 @@ meter_html = """
     user-select: none;
   }
 
-  #dsp-tag {
-    position: absolute;
-    top: 10px;
-    left: 20px;
-    background: linear-gradient(to right, #06b6d4, #3b82f6);
-    padding: 4px 10px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    z-index: 100;
-  }
-
   #app-container {
     display: flex;
     justify-content: center;
@@ -171,7 +158,6 @@ meter_html = """
 </style>
 </head>
 <body>
-  <div id="dsp-tag">DSP</div>
 
   <div id="app-container">
     <div id="labels">
