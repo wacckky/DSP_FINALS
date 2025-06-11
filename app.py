@@ -3,80 +3,58 @@ from streamlit.components.v1 import html
 
 st.set_page_config(page_title="Sound Level Meter", layout="centered")
 
-st.markdown(
-    """
+st.markdown("""
     <style>
     .stApp {
-        background-color: black !important;
-        color: white !important;
+        background-color: black;
+        color: white;
     }
     .streamlit-title {
-        font-size: 3em !important;
-        font-weight: bold !important;
-        color: white !important;
+        font-size: 3em;
+        font-weight: bold;
+        color: white;
     }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
 st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
-meter_html = """
+html_code = """
 <style>
-  html, body {
-    margin: 0; padding: 0;
-    background: transparent;
-    font-family: 'Poppins', sans-serif;
-    color: white;
-    user-select: none;
-  }
-
-  #app-container {
+#app-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 550px;
     max-width: 600px;
     margin: 40px auto 0;
-    position: relative;
-  }
+    font-family: 'Poppins', sans-serif;
+}
 
-  #labels {
+#labels {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 500px;
-    width: 40px;
+    width: 30px;
     font-size: 0.875rem;
     font-weight: 500;
     margin-right: 5px;
-  }
-
-  .label {
     text-align: right;
-  }
+}
 
-  .red { color: #ef4444; }
-  .yellow { color: #facc15; }
-  .green { color: #10b981; }
-
-  #ticks {
+#ticks {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 500px;
-    width: 15px;
-    margin-right: 5px;
-  }
-
-  .tick {
+    width: 10px;
+    margin-right: 10px;
     color: #9ca3af;
     font-size: 14px;
-    text-align: center;
-  }
+}
 
-  #meter-wrapper {
+#meter-wrapper {
     position: relative;
     width: 50px;
     height: 500px;
@@ -87,44 +65,48 @@ meter_html = """
     box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
     display: flex;
     align-items: flex-end;
-  }
+}
 
-  #bar {
+#bar {
     width: 100%;
     height: 0%;
     border-radius: 14px 14px 0 0;
     background: linear-gradient(to top, #ef4444, #facc15, #10b981);
     box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
     transition: height 0.2s ease-out;
-  }
+}
 
-  #db-stats {
+#db-stats {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     margin-left: 20px;
-  }
+}
 
-  #avg-db, #max-db {
+#avg-db, #max-db {
     font-size: 0.9rem;
     color: #9ca3af;
-  }
+}
 
-  #db-value {
+#db-value {
     font-weight: 700;
     font-size: 1.1rem;
     color: #ffffff;
-  }
+}
 
-  #out-message {
-    color: #ef4444;
-    font-weight: 600;
-    margin-top: 15px;
-    text-align: center;
-  }
+#reset-button {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    background: #e5e7eb;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: black;
+}
 
-  .overlay {
+.overlay {
     position: absolute;
     z-index: 10;
     top: 0; left: 0;
@@ -136,9 +118,9 @@ meter_html = """
     justify-content: center;
     align-items: center;
     flex-direction: column;
-  }
+}
 
-  .overlay button {
+.overlay button {
     padding: 10px 24px;
     font-size: 1.2rem;
     background: #10b981;
@@ -146,22 +128,15 @@ meter_html = """
     border: none;
     border-radius: 8px;
     cursor: pointer;
-  }
+}
 
-  .overlay button:hover {
+.overlay button:hover {
     background: #059669;
-  }
+}
 
-  #reset-button {
-    margin-top: 10px;
-    font-size: 0.8rem;
-    padding: 4px 12px;
-    background: #e5e7eb;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    color: black;
-  }
+.red { color: #ef4444; }
+.yellow { color: #facc15; }
+.green { color: #10b981; }
 </style>
 
 <div id="app-container">
@@ -212,7 +187,6 @@ meter_html = """
     <button onclick="startApp()">Start</button>
   </div>
 </div>
-<div id="out-message"></div>
 
 <script>
 let lastDb = 0;
@@ -227,7 +201,6 @@ function startApp() {
 }
 
 function initMic() {
-  const outMessage = document.getElementById('out-message');
   const bar = document.getElementById("bar");
   const dbValue = document.getElementById("db-value");
   const avgDbText = document.getElementById("avg-db");
@@ -248,7 +221,7 @@ function initMic() {
   };
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    outMessage.textContent = "getUserMedia not supported by your browser.";
+    alert("Microphone not supported.");
     return;
   }
 
@@ -299,11 +272,11 @@ function initMic() {
 
     })
     .catch(err => {
-      outMessage.textContent = "Microphone access denied.";
+      alert("Microphone access denied.");
       console.error(err);
     });
 }
 </script>
 """
 
-html(meter_html, height=620, scrolling=False)
+html(html_code, height=620, scrolling=False)
