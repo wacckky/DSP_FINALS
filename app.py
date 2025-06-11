@@ -42,8 +42,8 @@ meter_html = """
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 700px;
-    max-width: 450px;
+    height: 550px;
+    max-width: 400px;
     margin: 50px auto 0;
     position: relative;
   }
@@ -52,43 +52,35 @@ meter_html = """
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 600px;
-    width: 50px;
-    font-size: 0.75rem;
+    height: 500px;
+    width: 60px;
+    font-size: 0.875rem;
     font-weight: 500;
-    position: relative;
   }
 
   .label {
-    text-align: right;
-    padding-right: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    color: white;
+  }
+
+  .tick {
+    width: 10px;
+    height: 2px;
+    background-color: #9ca3af;
+    margin-right: 4px;
   }
 
   .red { color: #ef4444; }
   .yellow { color: #facc15; }
   .green { color: #10b981; }
 
-  #ticks {
-    position: absolute;
-    left: 48px;
-    top: 0;
-    height: 600px;
-    width: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .tick {
-    height: 1px;
-    width: 100%;
-    background-color: #6b7280;
-  }
-
   #meter-wrapper {
     position: relative;
-    width: 60px;
-    height: 600px;
+    width: 50px;
+    height: 500px;
     border-radius: 14px;
     background: #1f2937;
     border: 2px solid #374151;
@@ -179,34 +171,19 @@ meter_html = """
 
   <div id="app-container">
     <div id="labels">
-      <div class="label red">130</div>
-      <div class="label red">120</div>
-      <div class="label red">110</div>
-      <div class="label yellow">100</div>
-      <div class="label yellow">90</div>
-      <div class="label yellow">80</div>
-      <div class="label green">70</div>
-      <div class="label green">60</div>
-      <div class="label green">50</div>
-      <div class="label green">40</div>
-      <div class="label green">30</div>
-      <div class="label green">20</div>
-      <div class="label green">10</div>
-      <div id="ticks">
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-        <div class="tick"></div>
-      </div>
+      <div class="label red"><span class="tick"></span>130</div>
+      <div class="label red"><span class="tick"></span>120</div>
+      <div class="label red"><span class="tick"></span>110</div>
+      <div class="label yellow"><span class="tick"></span>100</div>
+      <div class="label yellow"><span class="tick"></span>90</div>
+      <div class="label yellow"><span class="tick"></span>80</div>
+      <div class="label green"><span class="tick"></span>70</div>
+      <div class="label green"><span class="tick"></span>60</div>
+      <div class="label green"><span class="tick"></span>50</div>
+      <div class="label green"><span class="tick"></span>40</div>
+      <div class="label green"><span class="tick"></span>30</div>
+      <div class="label green"><span class="tick"></span>20</div>
+      <div class="label green"><span class="tick"></span>10</div>
     </div>
 
     <div id="meter-wrapper">
@@ -281,11 +258,9 @@ function initMic() {
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
-
-        // Adjusted dB scaling (toned-down)
         let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.min(Math.max(db, -60), 0);      // clamp
-        let positiveDb = (db + 60) * 1.5;          // scale to ~0–90
+        db = Math.max(-130, db);
+        let positiveDb = 130 + db;
 
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
@@ -324,4 +299,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=800, scrolling=False)
+html(meter_html, height=600, scrolling=False)
