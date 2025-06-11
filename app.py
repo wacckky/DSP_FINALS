@@ -61,7 +61,7 @@ meter_html = """
   .label {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 6px;
     color: white;
   }
@@ -70,7 +70,7 @@ meter_html = """
     width: 10px;
     height: 2px;
     background-color: #9ca3af;
-    margin-right: 4px;
+    margin-left: 4px;
   }
 
   .red { color: #ef4444; }
@@ -95,7 +95,7 @@ meter_html = """
     width: 100%;
     height: 0%;
     border-radius: 14px 14px 0 0;
-    background: linear-gradient(to top, #10b981, #facc15, #ef4444);
+    background: linear-gradient(to top, #ef4444, #facc15, #10b981);
     box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
     transition: height 0.2s ease-out;
   }
@@ -171,19 +171,19 @@ meter_html = """
 
   <div id="app-container">
     <div id="labels">
-      <div class="label red"><span class="tick"></span>130</div>
-      <div class="label red"><span class="tick"></span>120</div>
-      <div class="label red"><span class="tick"></span>110</div>
-      <div class="label yellow"><span class="tick"></span>100</div>
-      <div class="label yellow"><span class="tick"></span>90</div>
-      <div class="label yellow"><span class="tick"></span>80</div>
-      <div class="label green"><span class="tick"></span>70</div>
-      <div class="label green"><span class="tick"></span>60</div>
-      <div class="label green"><span class="tick"></span>50</div>
-      <div class="label green"><span class="tick"></span>40</div>
-      <div class="label green"><span class="tick"></span>30</div>
-      <div class="label green"><span class="tick"></span>20</div>
-      <div class="label green"><span class="tick"></span>10</div>
+      <div class="label red">130<span class="tick"></span></div>
+      <div class="label red">120<span class="tick"></span></div>
+      <div class="label red">110<span class="tick"></span></div>
+      <div class="label yellow">100<span class="tick"></span></div>
+      <div class="label yellow">90<span class="tick"></span></div>
+      <div class="label yellow">80<span class="tick"></span></div>
+      <div class="label green">70<span class="tick"></span></div>
+      <div class="label green">60<span class="tick"></span></div>
+      <div class="label green">50<span class="tick"></span></div>
+      <div class="label green">40<span class="tick"></span></div>
+      <div class="label green">30<span class="tick"></span></div>
+      <div class="label green">20<span class="tick"></span></div>
+      <div class="label green">10<span class="tick"></span></div>
     </div>
 
     <div id="meter-wrapper">
@@ -258,13 +258,14 @@ function initMic() {
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
+        
+        // Tone down exaggeration here by adjusting scale
+        let db = 20 * Math.log10(rms + 1e-6);
+        db = Math.max(-130, db);
+        let positiveDb = 130 + db;
 
-        // Adjusted dB calculation
-        const reference = 0.05; // typical quiet room level
-        let db = 20 * Math.log10(rms / reference + 1e-6);
-        let positiveDb = Math.max(0, Math.min(130, db + 70)); // clamp to 0–130 dB
-
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
+        // Apply smoothing
+        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb * 0.85;
         lastDb = smoothedDb;
 
         dbHistory.push(smoothedDb);
