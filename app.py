@@ -219,11 +219,23 @@ function initMic() {
   let maxDb = -100;
 
   resetButton.onclick = () => {
-    dbHistory = [];
-    maxDb = -100;
-    avgDbText.textContent = "Avg: 0 dB";
-    maxDbText.textContent = "Max: 0 dB";
-  };
+  clearInterval(intervalId); // Stop updates temporarily
+
+  // Reset visuals to 0
+  dbHistory = [];
+  maxDb = -100;
+  lastDb = -100;
+  bar.style.height = "0%";
+  dbValue.textContent = "dB: 0";
+  avgDbText.textContent = "Avg: 0 dB";
+  maxDbText.textContent = "Max: 0 dB";
+
+  // Brief pause before restarting meter
+  setTimeout(() => {
+    intervalId = setInterval(updateMeter, 100);
+  }, 500); // 0.5 second pause
+};
+
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     outMessage.textContent = "getUserMedia not supported by your browser.";
