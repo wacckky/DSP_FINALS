@@ -23,12 +23,7 @@ st.markdown(
 st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
 
 meter_html = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
   html, body {
     margin: 0; padding: 0;
     background: transparent;
@@ -36,13 +31,14 @@ meter_html = """
     color: white;
     user-select: none;
   }
+
   #app-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 550px;
-    max-width: 500px;
-    margin: 50px auto 0;
+    max-width: 600px;
+    margin: 40px auto 0;
     position: relative;
   }
 
@@ -54,16 +50,31 @@ meter_html = """
     width: 40px;
     font-size: 0.875rem;
     font-weight: 500;
+    margin-right: 5px;
   }
 
   .label {
-    color: white;
     text-align: right;
   }
 
   .red { color: #ef4444; }
   .yellow { color: #facc15; }
   .green { color: #10b981; }
+
+  #ticks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 500px;
+    width: 15px;
+    margin-right: 5px;
+  }
+
+  .tick {
+    color: #9ca3af;
+    font-size: 14px;
+    text-align: center;
+  }
 
   #meter-wrapper {
     position: relative;
@@ -73,10 +84,9 @@ meter_html = """
     background: #1f2937;
     border: 2px solid #374151;
     overflow: hidden;
-    margin: 0 10px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
     display: flex;
     align-items: flex-end;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
   }
 
   #bar {
@@ -86,20 +96,6 @@ meter_html = """
     background: linear-gradient(to top, #ef4444, #facc15, #10b981);
     box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
     transition: height 0.2s ease-out;
-  }
-
-  #ticks {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 500px;
-    width: 10px;
-  }
-
-  .tick {
-    width: 10px;
-    height: 2px;
-    background-color: #9ca3af;
   }
 
   #db-stats {
@@ -135,7 +131,6 @@ meter_html = """
     width: 100%;
     height: 100%;
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     background: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
@@ -151,7 +146,6 @@ meter_html = """
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s ease;
   }
 
   .overlay button:hover {
@@ -169,8 +163,6 @@ meter_html = """
     color: black;
   }
 </style>
-</head>
-<body>
 
 <div id="app-container">
   <div id="labels">
@@ -189,24 +181,24 @@ meter_html = """
     <div class="label green">10</div>
   </div>
 
-  <div id="meter-wrapper">
-    <div id="bar"></div>
+  <div id="ticks">
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
+    <div class="tick">▌</div>
   </div>
 
-  <div id="ticks">
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
-    <div class="tick"></div>
+  <div id="meter-wrapper">
+    <div id="bar"></div>
   </div>
 
   <div id="db-stats">
@@ -312,8 +304,6 @@ function initMic() {
     });
 }
 </script>
-</body>
-</html>
 """
 
 html(meter_html, height=620, scrolling=False)
