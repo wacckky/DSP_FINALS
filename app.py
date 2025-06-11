@@ -168,7 +168,6 @@ meter_html = """
     </div>
     <div id="meter-wrapper">
       <div id="bar"></div>
-      <!-- Tick lines on the right side -->
       <script>
         for (let db = 10; db <= 130; db += 10) {
           const pos = ((db - 10) / 120) * 250;
@@ -256,8 +255,7 @@ function initMic() {
       setInterval(updateMeter, 100);
     })
     .catch(err => {
-      alert("Microphone access denied.");
-      console.error(err);
+      document.getElementById("overlay").innerHTML = `<div style='color:red; text-align:center;'>Microphone access denied.<br>Please allow microphone access and refresh.</div>`;
     });
 }
 </script>
