@@ -115,7 +115,7 @@ meter_html = """
   #db-value {
     font-weight: 700;
     font-size: 1.1rem;
-    color: #111827;
+    color: #ffffff;
   }
 
   #out-message {
