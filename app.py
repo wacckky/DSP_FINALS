@@ -42,8 +42,8 @@ meter_html = """
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 280px;
-    max-width: 400px;
+    height: 300px;
+    max-width: 420px;
     margin: 50px auto 0;
     position: relative;
   }
@@ -52,7 +52,7 @@ meter_html = """
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 250px;
+    height: 260px;
     width: 40px;
     font-size: 0.875rem;
     font-weight: 500;
@@ -70,7 +70,7 @@ meter_html = """
   #meter-wrapper {
     position: relative;
     width: 50px;
-    height: 250px;
+    height: 260px;
     border-radius: 14px;
     background: #1f2937;
     border: 2px solid #374151;
@@ -172,6 +172,9 @@ meter_html = """
       <div class="label green">50</div>
       <div class="label green">40</div>
       <div class="label green">30</div>
+      <div class="label green">20</div>
+      <div class="label green">10</div>
+      <div class="label green">0</div>
     </div>
 
     <div id="meter-wrapper">
@@ -247,10 +250,10 @@ function initMic() {
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
         let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.max(-130, db);  // allow down to -130 dB
-        let positiveDb = 130 + db; // shift to positive
+        db = Math.max(-100, db);
+        let posDb = 130 + db;  // Convert to positive range: -100 → 30 dB, 0 → 130 dB
 
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
+        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * posDb;
         lastDb = smoothedDb;
 
         dbHistory.push(smoothedDb);
@@ -259,7 +262,7 @@ function initMic() {
         const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
         maxDb = Math.max(maxDb, smoothedDb);
 
-        const percentage = Math.min(100, (smoothedDb / 130) * 100);
+        const percentage = (smoothedDb / 130) * 100;
 
         bar.style.transition = "height 0.15s ease-out";
         bar.style.height = percentage + "%";
@@ -287,4 +290,4 @@ function initMic() {
 </html>
 """
 
-html(meter_html, height=480, scrolling=False)
+html(meter_html, height=520, scrolling=False)
