@@ -108,13 +108,13 @@ meter_html = """
   }
 
   #avg-db, #max-db {
-    font-size: 0.9rem;
+    font-size: 1.9rem;
     color: #9ca3af;
   }
 
   #db-value {
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 2.1rem;
     color: #ffffff;
   }
 
@@ -172,18 +172,18 @@ meter_html = """
   <div id="app-container">
     <div id="labels">
       <div class="label red">130<span class="tick"></span></div>
-      <div class="label red"><span class="tick"></span>120</div>
-      <div class="label red"><span class="tick"></span>110</div>
-      <div class="label yellow"><span class="tick"></span>100</div>
-      <div class="label yellow"><span class="tick"></span>90</div>
-      <div class="label yellow"><span class="tick"></span>80</div>
-      <div class="label green"><span class="tick"></span>70</div>
-      <div class="label green"><span class="tick"></span>60</div>
-      <div class="label green"><span class="tick"></span>50</div>
-      <div class="label green"><span class="tick"></span>40</div>
-      <div class="label green"><span class="tick"></span>30</div>
-      <div class="label green"><span class="tick"></span>20</div>
-      <div class="label green"><span class="tick"></span>10</div>
+      <div class="label red">120<span class="tick"></span></div>
+      <div class="label red">110<span class="tick"></span></div>
+      <div class="label yellow">100<span class="tick"></span></div>
+      <div class="label yellow">90<span class="tick"></span></div>
+      <div class="label yellow">80<span class="tick"></span></div>
+      <div class="label green">70<span class="tick"></span></div>
+      <div class="label green">60<span class="tick"></span></div>
+      <div class="label green">50<span class="tick"></span></div>
+      <div class="label green">40<span class="tick"></span></div>
+      <div class="label green">30<span class="tick"></span></div>
+      <div class="label green">20<span class="tick"></span></div>
+      <div class="label green">10<span class="tick"></span></div>
     </div>
 
     <div id="meter-wrapper">
