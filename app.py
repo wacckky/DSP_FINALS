@@ -43,7 +43,7 @@ meter_html = """
     justify-content: center;
     align-items: center;
     height: 550px;
-    max-width: 400px;
+    max-width: 500px;
     margin: 50px auto 0;
     position: relative;
   }
@@ -53,23 +53,19 @@ meter_html = """
     flex-direction: column;
     justify-content: space-between;
     height: 500px;
-    width: 80px;
     font-size: 0.875rem;
     font-weight: 500;
-    position: relative;
+    margin-right: 5px;
   }
 
   .label {
     display: flex;
     align-items: center;
-    gap: 6px;
     color: white;
-    position: relative;
+    gap: 5px;
   }
 
   .tick {
-    position: absolute;
-    left: 65px;
     width: 20px;
     height: 2px;
     background-color: #9ca3af;
@@ -173,19 +169,19 @@ meter_html = """
 
   <div id="app-container">
     <div id="labels">
-      <div class="label red">130 <div class="tick"></div></div>
-      <div class="label red">120 <div class="tick"></div></div>
-      <div class="label red">110 <div class="tick"></div></div>
-      <div class="label yellow">100 <div class="tick"></div></div>
-      <div class="label yellow">90 <div class="tick"></div></div>
-      <div class="label yellow">80 <div class="tick"></div></div>
-      <div class="label green">70 <div class="tick"></div></div>
-      <div class="label green">60 <div class="tick"></div></div>
-      <div class="label green">50 <div class="tick"></div></div>
-      <div class="label green">40 <div class="tick"></div></div>
-      <div class="label green">30 <div class="tick"></div></div>
-      <div class="label green">20 <div class="tick"></div></div>
-      <div class="label green">10 <div class="tick"></div></div>
+      <div class="label red"><div class="tick"></div><span>130</span></div>
+      <div class="label red"><div class="tick"></div><span>120</span></div>
+      <div class="label red"><div class="tick"></div><span>110</span></div>
+      <div class="label yellow"><div class="tick"></div><span>100</span></div>
+      <div class="label yellow"><div class="tick"></div><span>90</span></div>
+      <div class="label yellow"><div class="tick"></div><span>80</span></div>
+      <div class="label green"><div class="tick"></div><span>70</span></div>
+      <div class="label green"><div class="tick"></div><span>60</span></div>
+      <div class="label green"><div class="tick"></div><span>50</span></div>
+      <div class="label green"><div class="tick"></div><span>40</span></div>
+      <div class="label green"><div class="tick"></div><span>30</span></div>
+      <div class="label green"><div class="tick"></div><span>20</span></div>
+      <div class="label green"><div class="tick"></div><span>10</span></div>
     </div>
 
     <div id="meter-wrapper">
@@ -206,95 +202,8 @@ meter_html = """
   <div id="out-message"></div>
 
 <script>
-let lastDb = 0;
-let dbHistory = [];
-const smoothingFactor = 0.3;
-const maxHistoryLength = 50;
-let intervalId = null;
-
 function startApp() {
   document.getElementById("overlay").style.display = "none";
-  initMic();
-}
-
-function initMic() {
-  const outMessage = document.getElementById('out-message');
-  const bar = document.getElementById("bar");
-  const dbValue = document.getElementById("db-value");
-  const avgDbText = document.getElementById("avg-db");
-  const maxDbText = document.getElementById("max-db");
-  const resetButton = document.getElementById("reset-button");
-
-  let maxDb = 0;
-
-  resetButton.onclick = () => {
-    dbHistory = [];
-    lastDb = 0;
-    maxDb = 0;
-    bar.style.transition = "height 0.3s ease-in-out";
-    bar.style.height = "0%";
-    dbValue.textContent = "dB: 0";
-    avgDbText.textContent = "Avg: 0 dB";
-    maxDbText.textContent = "Max: 0 dB";
-  };
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    outMessage.textContent = "getUserMedia not supported by your browser.";
-    return;
-  }
-
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      const dataArray = new Uint8Array(analyser.fftSize);
-
-      function updateMeter() {
-        analyser.getByteTimeDomainData(dataArray);
-        let sumSquares = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          const normalized = (dataArray[i] - 128) / 128;
-          sumSquares += normalized * normalized;
-        }
-        const rms = Math.sqrt(sumSquares / dataArray.length);
-        let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.max(-130, db);
-        let positiveDb = 130 + db;
-
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
-        lastDb = smoothedDb;
-
-        dbHistory.push(smoothedDb);
-        if (dbHistory.length > maxHistoryLength) dbHistory.shift();
-
-        const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
-        maxDb = Math.max(maxDb, smoothedDb);
-
-        const percentage = Math.min(100, (smoothedDb / 130) * 100);
-
-        bar.style.transition = "height 0.15s ease-out";
-        bar.style.height = percentage + "%";
-        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
-        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
-        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
-      }
-
-      updateMeter();
-      intervalId = setInterval(updateMeter, 100);
-
-      window.addEventListener('beforeunload', () => {
-        clearInterval(intervalId);
-        if (audioCtx.state !== 'closed') audioCtx.close();
-      });
-
-    })
-    .catch(err => {
-      outMessage.textContent = "Microphone access denied.";
-      console.error(err);
-    });
 }
 </script>
 </body>
