@@ -271,9 +271,9 @@ with col1:
             const percentage = ((smoothedDb + 100) / 100) * 100;
 
             bar.style.height = percentage + "%";
-            dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
-            avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
-            maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
+            dbValue.textContent = `dB: \${Math.round(smoothedDb)}`;
+            avgDbText.textContent = `Avg: \${Math.round(avgDb)} dB`;
+            maxDbText.textContent = `Max: \${Math.round(maxDb)} dB`;
           }}
 
           updateMeter();
