@@ -6,15 +6,15 @@ st.set_page_config(page_title="Mic dB Level", layout="centered")
 st.markdown(
     """
     <style>
-    .stApp {
+      .stApp {
         background-color: black !important;
         color: white !important;
-    }
-    .streamlit-title {
+      }
+      .streamlit-title {
         font-size: 3em !important;
         font-weight: bold !important;
         color: white !important;
-    }
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -26,7 +26,7 @@ meter_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
 
@@ -42,25 +42,39 @@ meter_html = """
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 300px;
-    max-width: 420px;
-    margin: 50px auto 0;
+    height: 320px;
+    max-width: 440px;
+    margin: 40px auto;
     position: relative;
   }
 
   #labels {
+    position: relative;
+    height: 280px;
+    width: 60px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 260px;
-    width: 40px;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 500;
   }
 
-  .label {
+  .label-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .tick {
+    width: 10px;
+    height: 1px;
+    background: white;
+    margin-right: 6px;
+  }
+
+  .label-text {
+    width: 30px;
     text-align: right;
-    color: white;
   }
 
   .red { color: #ef4444; }
@@ -69,13 +83,13 @@ meter_html = """
 
   #meter-wrapper {
     position: relative;
-    width: 50px;
-    height: 260px;
+    width: 60px;
+    height: 280px;
     border-radius: 14px;
     background: #1f2937;
     border: 2px solid #374151;
-    overflow: hidden;
     margin: 0 20px;
+    overflow: hidden;
     display: flex;
     align-items: flex-end;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
@@ -83,10 +97,10 @@ meter_html = """
 
   #bar {
     width: 100%;
-    height: 0%;
-    border-radius: 14px 14px 0 0;
+    height: 0;
     background: linear-gradient(to top, #ef4444, #facc15, #10b981);
     box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
+    border-radius: 14px 14px 0 0;
     transition: height 0.2s ease-out;
   }
 
@@ -105,7 +119,7 @@ meter_html = """
   #db-value {
     font-weight: 700;
     font-size: 1.1rem;
-    color: #ffffff;
+    color: white;
   }
 
   #out-message {
@@ -119,10 +133,8 @@ meter_html = """
     position: absolute;
     z-index: 10;
     top: 0; left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     background: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
@@ -138,7 +150,6 @@ meter_html = """
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s ease;
   }
 
   .overlay button:hover {
@@ -152,34 +163,29 @@ meter_html = """
     background: #e5e7eb;
     border: none;
     border-radius: 6px;
-    cursor: pointer;
     color: black;
+    cursor: pointer;
   }
 </style>
 </head>
 <body>
-
   <div id="app-container">
     <div id="labels">
-      <div class="label red">130</div>
-      <div class="label red">120</div>
-      <div class="label red">110</div>
-      <div class="label yellow">100</div>
-      <div class="label yellow">90</div>
-      <div class="label yellow">80</div>
-      <div class="label green">70</div>
-      <div class="label green">60</div>
-      <div class="label green">50</div>
-      <div class="label green">40</div>
-      <div class="label green">30</div>
-      <div class="label green">20</div>
-      <div class="label green">10</div>
-      <div class="label green">0</div>
+      <!-- Labels + ticks row -->
+      {% for v, c in [
+        (130,'red'), (120,'red'), (110,'red'),
+        (100,'yellow'), (90,'yellow'), (80,'yellow'),
+        (70,'green'), (60,'green'), (50,'green'),
+        (40,'green'), (30,'green'), (20,'green'), (10,'green')
+      ] %}
+      <div class="label-row">
+        <div class="tick"></div>
+        <div class="label-text {{c}}">{{v}}</div>
+      </div>
+      {% endfor %}
     </div>
 
-    <div id="meter-wrapper">
-      <div id="bar"></div>
-    </div>
+    <div id="meter-wrapper"><div id="bar"></div></div>
 
     <div id="db-stats">
       <div id="avg-db">Avg: 0 dB</div>
@@ -192,102 +198,92 @@ meter_html = """
       <button onclick="startApp()">Start</button>
     </div>
   </div>
+
   <div id="out-message"></div>
 
-<script>
-let lastDb = 0;
-let dbHistory = [];
-const smoothingFactor = 0.3;
-const maxHistoryLength = 50;
-let intervalId = null;
+  <script>
+    let lastDb = 0, dbHistory = [], intervalId;
+    const smoothing = 0.3, historyMax = 50;
 
-function startApp() {
-  document.getElementById("overlay").style.display = "none";
-  initMic();
-}
+    function startApp() {
+      document.getElementById('overlay').style.display = 'none';
+      initMic();
+    }
 
-function initMic() {
-  const outMessage = document.getElementById('out-message');
-  const bar = document.getElementById("bar");
-  const dbValue = document.getElementById("db-value");
-  const avgDbText = document.getElementById("avg-db");
-  const maxDbText = document.getElementById("max-db");
-  const resetButton = document.getElementById("reset-button");
+    function initMic() {
+      const out = document.getElementById('out-message');
+      const bar = document.getElementById('bar');
+      const dbV = document.getElementById('db-value');
+      const avgV = document.getElementById('avg-db');
+      const maxV = document.getElementById('max-db');
+      const reset = document.getElementById('reset-button');
+      let maxDb = 0;
 
-  let maxDb = 0;
+      reset.onclick = () => {
+        dbHistory = []; lastDb = 0; maxDb = 0;
+        bar.style.height = '0%';
+        dbV.textContent = 'dB: 0';
+        avgV.textContent = 'Avg: 0 dB';
+        maxV.textContent = 'Max: 0 dB';
+      };
 
-  resetButton.onclick = () => {
-    dbHistory = [];
-    lastDb = 0;
-    maxDb = 0;
-    bar.style.transition = "height 0.3s ease-in-out";
-    bar.style.height = "0%";
-    dbValue.textContent = "dB: 0";
-    avgDbText.textContent = "Avg: 0 dB";
-    maxDbText.textContent = "Max: 0 dB";
-  };
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    outMessage.textContent = "getUserMedia not supported by your browser.";
-    return;
-  }
-
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      const dataArray = new Uint8Array(analyser.fftSize);
-
-      function updateMeter() {
-        analyser.getByteTimeDomainData(dataArray);
-        let sumSquares = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          const normalized = (dataArray[i] - 128) / 128;
-          sumSquares += normalized * normalized;
-        }
-        const rms = Math.sqrt(sumSquares / dataArray.length);
-        let db = 20 * Math.log10(rms + 1e-6);
-        db = Math.max(-100, db);
-        let posDb = 130 + db;  // Convert to positive range: -100 → 30 dB, 0 → 130 dB
-
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * posDb;
-        lastDb = smoothedDb;
-
-        dbHistory.push(smoothedDb);
-        if (dbHistory.length > maxHistoryLength) dbHistory.shift();
-
-        const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
-        maxDb = Math.max(maxDb, smoothedDb);
-
-        const percentage = (smoothedDb / 130) * 100;
-
-        bar.style.transition = "height 0.15s ease-out";
-        bar.style.height = percentage + "%";
-        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
-        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
-        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        out.textContent = 'Microphone not supported.';
+        return;
       }
 
-      updateMeter();
-      intervalId = setInterval(updateMeter, 100);
+      navigator.mediaDevices.getUserMedia({audio: true})
+        .then(stream => {
+          const ctx = new (AudioContext || webkitAudioContext)();
+          const src = ctx.createMediaStreamSource(stream);
+          const analyzer = ctx.createAnalyser();
+          analyzer.fftSize = 256;
+          src.connect(analyzer);
+          const data = new Uint8Array(analyzer.fftSize);
 
-      window.addEventListener('beforeunload', () => {
-        clearInterval(intervalId);
-        if (audioCtx.state !== 'closed') audioCtx.close();
-      });
+          function update() {
+            analyzer.getByteTimeDomainData(data);
+            let sum=0;
+            data.forEach(v => {
+              const n = (v - 128)/128;
+              sum += n*n;
+            });
+            const rms = Math.sqrt(sum/data.length);
+            let db = 20 * Math.log10(rms + 1e-6);
+            db = Math.max(-130, db);
+            const pos = db + 130;
 
-    })
-    .catch(err => {
-      outMessage.textContent = "Microphone access denied.";
-      console.error(err);
-    });
-}
-</script>
+            const smooth = smoothing * lastDb + (1 - smoothing) * pos;
+            lastDb = smooth;
+
+            dbHistory.push(smooth);
+            if (dbHistory.length > historyMax) dbHistory.shift();
+            const avg = dbHistory.reduce((a,b)=>a+b)/dbHistory.length;
+            maxDb = Math.max(maxDb, smooth);
+
+            const pct = Math.min(100, (smooth / 130) * 100);
+            bar.style.height = pct + '%';
+
+            dbV.textContent = 'dB: ' + Math.round(smooth);
+            avgV.textContent = 'Avg: ' + Math.round(avg) + ' dB';
+            maxV.textContent = 'Max: ' + Math.round(maxDb) + ' dB';
+          }
+
+          update();
+          intervalId = setInterval(update, 100);
+          window.addEventListener('beforeunload', () => {
+            clearInterval(intervalId);
+            if (ctx.state !== 'closed') ctx.close();
+          });
+        })
+        .catch(err => {
+          out.textContent = 'Microphone access denied.';
+          console.error(err);
+        });
+    }
+  </script>
 </body>
 </html>
 """
 
-html(meter_html, height=520, scrolling=False)
+html(meter_html.replace('{%','<!--').replace('%}','-->'), height=560, scrolling=False)
