@@ -1,49 +1,3 @@
-import streamlit as st
-from streamlit.components.v1 import html
-
-st.set_page_config(page_title="Mic dB Level", layout="centered")
-
-# Initialize session state for smoothing factor if it doesn't exist
-if 'smoothing_factor' not in st.session_state:
-    st.session_state['smoothing_factor'] = 0.3
-
-# Create a slider for the smoothing factor
-smoothing_factor = st.slider(
-    "Smoothing Factor",
-    min_value=0.0,
-    max_value=0.99,
-    value=st.session_state['smoothing_factor'],
-    step=0.01,
-    key="smoothing_slider",  # Add a key for the slider
-    help="Adjust the smoothing of the dB readings.  Lower values are more responsive, higher values are smoother."
-)
-
-# Update session state with the slider value
-st.session_state['smoothing_factor'] = smoothing_factor
-
-# Inject CSS to set background color and title style
-st.markdown(
-    """
-    <style>
-    /* Target the main Streamlit app area */
-    .stApp {
-        background-color: black !important;
-        color: white !important;
-    }
-    /* Target the title specifically */
-    .streamlit-title {
-        font-size: 3em !important; /* Use !important to ensure override */
-        font-weight: bold !important;
-        color: white !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Use markdown for the title
-st.markdown('<h1 class="streamlit-title">Sound Level Meter</h1>', unsafe_allow_html=True)
-
 meter_html = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -54,16 +8,16 @@ meter_html = f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
 
-  html, body {
+  html, body {{
     margin: 0; padding: 0;
     background: transparent; /* Important:  Let Streamlit's background show through */
     font-family: 'Poppins', sans-serif;
     height: 100%;
     user-select: none;
     color: white; /* Added to make text visible on black background */
-  }
+  }}
 
-  #app-container {
+  #app-container {{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -73,9 +27,9 @@ meter_html = f"""
     margin: 0 auto;
     padding: 20px;
     position: relative;
-  }
+  }}
 
-  #labels {
+  #labels {{
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -84,18 +38,18 @@ meter_html = f"""
     font-size: 0.875rem;
     font-weight: 500;
     user-select: none;
-  }
+  }}
 
-  .label {
+  .label {{
     text-align: right;
     color: white; /* Added to make labels visible */
-  }
+  }}
 
-  .red { color: #ef4444; }
-  .yellow { color: #facc15; }
-  .green { color: #10b981; }
+  .red {{ color: #ef4444; }}
+  .yellow {{ color: #facc15; }}
+  .green {{ color: #10b981; }}
 
-  #meter-wrapper {
+  #meter-wrapper {{
     position: relative;
     width: 40px;
     height: 250px;
@@ -106,44 +60,44 @@ meter_html = f"""
     overflow: hidden;
     display: flex;
     align-items: flex-end;
-  }
+  }}
 
-  #bar {
+  #bar {{
     width: 100%;
     height: 0%;
     background: linear-gradient(to top, #10b981, #facc15, #ef4444);
     border-radius: 12px 12px 0 0;
     transition: height 0.2s ease-out;
     box-shadow: 0 4px 10px -1px rgba(255, 70, 70, 0.6);
-  }
+  }}
 
-  #db-stats {
+  #db-stats {{
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
     margin-left: 16px;
-  }
+  }}
 
-  #avg-db, #max-db {
+  #avg-db, #max-db {{
     font-size: 0.9rem;
     color: #6b7280;
-  }
+  }}
 
-  #db-value {
+  #db-value {{
     font-weight: 700;
     font-size: 1.1rem;
     color: #111827;
-  }
+  }}
 
-  #out-message {
+  #out-message {{
     color: #ef4444;
     font-weight: 600;
     margin-top: 15px;
     text-align: center;
-  }
+  }}
 
-  .overlay {
+  .overlay {{
     position: absolute;
     z-index: 10;
     top: 0; left: 0;
@@ -156,9 +110,9 @@ meter_html = f"""
     justify-content: center;
     align-items: center;
     flex-direction: column;
-  }
+  }}
 
-  .overlay button {
+  .overlay button {{
     padding: 10px 24px;
     font-size: 1.2rem;
     background: #10b981;
@@ -167,13 +121,13 @@ meter_html = f"""
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s ease;
-  }
+  }}
 
-  .overlay button:hover {
+  .overlay button:hover {{
     background: #059669;
-  }
+  }}
 
-  #reset-button {
+  #reset-button {{
     margin-top: 10px;
     font-size: 0.8rem;
     padding: 4px 12px;
@@ -181,7 +135,7 @@ meter_html = f"""
     border: none;
     border-radius: 6px;
     cursor: pointer;
-  }
+  }}
 </style>
 </head>
 <body>
@@ -218,7 +172,7 @@ meter_html = f"""
 let lastDb = -100;
 let dbHistory = [];
 // Get the smoothing factor from Streamlit session state
-const smoothingFactor = parseFloat({st.session_state.smoothing_factor});
+const smoothingFactor = parseFloat('{st.session_state.smoothing_factor}');
 const maxHistoryLength = 50;
 let intervalId = null;
 
