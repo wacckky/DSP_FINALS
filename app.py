@@ -54,7 +54,7 @@ meter_html = """
     align-items: center;
     height: 550px;
     max-width: 400px;
-    margin: 30px auto 0;
+    margin: 35px auto 0;
     position: relative;
   }
 
