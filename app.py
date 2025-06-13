@@ -31,7 +31,7 @@ st.markdown(
 # Title
 st.markdown('<h1 class="streamlit-title">SOUND LEVEL METER</h1>', unsafe_allow_html=True)
 
-# Embed the HTML + JS Sound Meter
+# HTML + JavaScript Sound Meter
 meter_html = """
 <!DOCTYPE html>
 <html lang="en">
@@ -268,53 +268,4 @@ function initMic() {
       source.connect(analyser);
       const dataArray = new Uint8Array(analyser.fftSize);
 
-      function updateMeter() {
-        if (isPaused) return;
-
-        analyser.getByteTimeDomainData(dataArray);
-        let sumSquares = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          const normalized = (dataArray[i] - 128) / 128;
-          sumSquares += normalized * normalized;
-        }
-        const rms = Math.sqrt(sumSquares / dataArray.length);
-        const reference = 0.05;
-        let db = 20 * Math.log10(rms / reference + 1e-6);
-        let positiveDb = Math.max(0, Math.min(130, db + 70));
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
-        lastDb = smoothedDb;
-
-        dbHistory.push(smoothedDb);
-        if (dbHistory.length > maxHistoryLength) dbHistory.shift();
-
-        const avgDb = dbHistory.reduce((a, b) => a + b, 0) / dbHistory.length;
-        maxDb = Math.max(maxDb, smoothedDb);
-        const percentage = Math.min(100, (smoothedDb / 130) * 100);
-
-        bar.style.height = percentage + "%";
-        dbValue.textContent = `dB: ${Math.round(smoothedDb)}`;
-        avgDbText.textContent = `Avg: ${Math.round(avgDb)} dB`;
-        maxDbText.textContent = `Max: ${Math.round(maxDb)} dB`;
-      }
-
-      updateMeter();
-      intervalId = setInterval(updateMeter, 100);
-
-      window.addEventListener('beforeunload', () => {
-        clearInterval(intervalId);
-        if (audioCtx.state !== 'closed') audioCtx.close();
-      });
-
-    })
-    .catch(err => {
-      outMessage.textContent = "Microphone access denied.";
-      console.error(err);
-    });
-}
-</script>
-</body>
-</html>
-"""
-
-# Display the HTML in Streamlit
-html(meter_html, height=650, scrolling=False)
+     
