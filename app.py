@@ -260,9 +260,9 @@ function initMic() {
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
-        const reference = 0.05;
-        let db = 20 * Math.log10(rms / reference + 1e-6);
-        let positiveDb = Math.max(0, Math.min(130, db + 20));
+             
+        let db = 20 * Math.log10(rms / reference + 1e-8);
+        let positiveDb = Math.max(0, Math.min(130, db + 23));
 
 
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
