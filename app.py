@@ -31,7 +31,7 @@ st.markdown(
 # Title
 st.markdown('<h1 class="streamlit-title">SOUND LEVEL METER</h1>', unsafe_allow_html=True)
 
-# Embed the HTML + JS Sound Meter
+# HTML + JS Meter
 meter_html = """
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +39,6 @@ meter_html = """
 <meta charset="UTF-8" />
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
-
   html, body {
     margin: 0; padding: 0;
     background: transparent;
@@ -47,7 +46,6 @@ meter_html = """
     color: white;
     user-select: none;
   }
-
   #app-container {
     display: flex;
     justify-content: flex-start;
@@ -57,7 +55,6 @@ meter_html = """
     margin: 35px auto 0;
     position: relative;
   }
-
   #labels {
     display: flex;
     flex-direction: column;
@@ -67,7 +64,6 @@ meter_html = """
     font-size: 0.875rem;
     font-weight: 500;
   }
-
   .label {
     display: flex;
     align-items: center;
@@ -75,18 +71,15 @@ meter_html = """
     gap: 6px;
     color: white;
   }
-
   .tick {
     width: 10px;
     height: 2px;
     background-color: #9ca3af;
     margin-right: -15px;
   }
-
   .red { color: #ef4444; }
   .yellow { color: #facc15; }
   .green { color: #10b981; }
-
   #meter-wrapper {
     position: relative;
     width: 50px;
@@ -100,7 +93,6 @@ meter_html = """
     align-items: flex-end;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
   }
-
   #bar {
     width: 100%;
     height: 0%;
@@ -109,32 +101,27 @@ meter_html = """
     box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.4);
     transition: height 0.2s ease-out;
   }
-
   #db-stats {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
   }
-
   #avg-db, #max-db {
     font-size: 1.9rem;
     color: #9ca3af;
   }
-
   #db-value {
     font-weight: 700;
     font-size: 2.1rem;
     color: #ffffff;
   }
-
   #out-message {
     color: #ef4444;
     font-weight: 600;
     margin-top: 15px;
     text-align: center;
   }
-
   .overlay {
     position: absolute;
     z-index: 10;
@@ -149,7 +136,6 @@ meter_html = """
     align-items: center;
     flex-direction: column;
   }
-
   .overlay button {
     padding: 10px 24px;
     font-size: 1.2rem;
@@ -160,11 +146,9 @@ meter_html = """
     cursor: pointer;
     transition: background 0.3s ease;
   }
-
   .overlay button:hover {
     background: #059669;
   }
-
   #reset-button, #pause-button {
     margin-top: 10px;
     font-size: 0.8rem;
@@ -175,11 +159,9 @@ meter_html = """
     cursor: pointer;
     color: black;
   }
-
 </style>
 </head>
 <body>
-
   <div id="app-container">
     <div id="labels">
       <div class="label red">130<span class="tick"></span></div>
@@ -280,7 +262,7 @@ function initMic() {
         const rms = Math.sqrt(sumSquares / dataArray.length);
         const reference = 0.05;
         let db = 20 * Math.log10(rms / reference + 1e-6);
-        let positiveDb = Math.max(0, Math.min(130, db + 70));
+        let positiveDb = Math.max(0, db);  // <-- Adjusted here
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
         lastDb = smoothedDb;
 
@@ -316,5 +298,5 @@ function initMic() {
 </html>
 """
 
-# Display the HTML in Streamlit
+# Render in Streamlit
 html(meter_html, height=650, scrolling=False)
