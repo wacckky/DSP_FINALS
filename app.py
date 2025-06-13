@@ -260,15 +260,9 @@ function initMic() {
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
-
-/        // Direct mapping from RMS to dB with 0 base for silence
-        let db = 20 * Math.log10(rms + 1e-8);  // Add small offset to avoid log(0)
-        let shiftedDb = db + 100;  // Shift so silence is close to 0
-        let clampedDb = Math.max(0, Math.min(130, shiftedDb));
-        const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * clampedDb;
-        lastDb = smoothedDb;
-
-
+        const reference = 0.05;
+        let db = 20 * Math.log10(rms / reference + 1e-6);
+        let positiveDb = Math.max(0, Math.min(130, db + 20));
 
 
         const smoothedDb = smoothingFactor * lastDb + (1 - smoothingFactor) * positiveDb;
