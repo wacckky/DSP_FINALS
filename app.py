@@ -32,7 +32,8 @@ st.markdown(
 st.markdown('<h1 class="streamlit-title">SOUND LEVEL METER</h1>', unsafe_allow_html=True)
 
 # HTML + JavaScript Sound Meter
-meter_html = """
+meter_html = 
+"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
